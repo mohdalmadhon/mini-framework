@@ -17,7 +17,7 @@ export function render(node) {
     if(node.attrs) {
         for (const [k,v] of Object.entries(node.attrs)) {
             if (typeof v === "function") {
-                elem[`on${k}`] = v
+                elem[`on${k}`] = v;
             } else if (v === true) {
                 elem.setAttribute(k, '');
             } else if (v === false || v === null) {
