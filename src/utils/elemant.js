@@ -1,4 +1,3 @@
-import { isTypeEventListener } from "./events.js";
 
 /**
  * Represents a virtual DOM element.
@@ -76,11 +75,6 @@ export class VElement {
             const vType = typeof v;
 
             if (vType === "function") {
-                if (!isTypeEventListener(v)) {
-                    console.error(`invalid event listener for "${k}"`);
-                    return false;
-                }
-
                 continue;
             }
 
