@@ -1,157 +1,107 @@
+/**
+ * @module renderer/diffing
+ *
+ * Virtual DOM diffing. Instead of rebuilding the page, the new virtual tree
+ * is compared with the previous one and only the differences are applied to
+ * the real DOM. Elements that did not change keep their focus, caret and
+ * scroll position.
+ */
 import { VElement } from "../utils/elemant.js";
+import { render, namespaceOf } from "./render.js";
+import { applyAttrs } from "./attrs.js";
 
 /**
- * 
- * @param {VElement} oldVTree 
- * @param {VElement|null} newVTree 
- * 
- * @returns {Function}
+ * Updates one real DOM node so it matches `newV`.
+ *
+ * @param {VElement|string} oldV - Virtual node that produced `node`.
+ * @param {VElement|string} newV - Wanted virtual node.
+ * @param {Node} node - The real DOM node for `oldV`.
+ * @returns {Node} The node now in the DOM (a new one if it had to be replaced).
  */
-export function diff(oldVTree, newVTree) {
-    if (newVTree == null) {
-        return (node) => {
-            node.remove();
-            return undefined;
-        };
+export function patchNode(oldV, newV, node) {
+    if (typeof oldV === "string" && typeof newV === "string") {
+        if (oldV !== newV) node.nodeValue = newV;
+        return node;
     }
 
     if (
-        typeof oldVTree === "string" ||
-        typeof newVTree === "string"
+        typeof oldV === "string" ||
+        typeof newV === "string" ||
+        oldV.tagsName !== newV.tagsName
     ) {
-        if (oldVTree !== newVTree) {
-            return (node) => {
-                const newNode = render(newVTree);
-                node.replaceWith(newNode);
-                return newNode;
-            };
-        }
-
-        return (node) => node;
+        const fresh = render(newV, namespaceOf(node.parentNode));
+        node.replaceWith(fresh);
+        return fresh;
     }
 
-    if (oldVTree.tagsName !== newVTree.tagsName) {
-        return (node) => {
-            const newNode = render(newVTree);
-            node.replaceWith(newNode);
-            return newNode;
-        };
-    }
+    applyAttrs(node, oldV.attrs, newV.attrs, false);
+    patchChildren(node, oldV.children, newV.children);
+    applyAttrs(node, oldV.attrs, newV.attrs, true);
 
-    const patchAttrs = diffAttrs(
-        oldVTree.attrs,
-        newVTree.attrs
-    );
-
-    const patchChildren = diffChildren(
-        oldVTree.children || [],
-        newVTree.children || []
-    );
-
-    return (node) => {
-        if (node instanceof HTMLElement) {
-            patchAttrs(node);
-            patchChildren(node);
-        }
-
-        return node;
-    };
+    return node;
 }
 
 /**
- * @param {Object} oldAttrs
- * @param {Object} newAttrs
+ * Updates the children of a real DOM parent so they match `newChildren`.
  *
- * @returns {Function}
+ * Children with a `key` attribute are matched by key (so reordering or
+ * deleting list items reuses the right DOM nodes); children without a key
+ * are matched by position.
+ *
+ * @param {Node} parent - Real DOM parent.
+ * @param {Array<VElement|string>} oldChildren - Children that produced `parent.childNodes`.
+ * @param {Array<VElement|string>} newChildren - Wanted children.
+ * @returns {void}
  */
-export function diffAttrs(oldAttrs = {}, newAttrs = {}) {
-    return (node) => {
-        const attrs = new Set([
-            ...Object.keys(oldAttrs || {}),
-            ...Object.keys(newAttrs || {}),
-        ]);
+export function patchChildren(parent, oldChildren, newChildren) {
+    const oldNodes = Array.from(parent.childNodes);
 
-        for (const attr of attrs) {
-            const oldValue = oldAttrs?.[attr];
-            const newValue = newAttrs?.[attr];
+    /** @type {Map<string|number, number>} */
+    const keyed = new Map();
+    /** @type {number[]} */
+    const unkeyed = [];
 
-            if (oldValue === newValue) {
-                continue;
-            }
+    oldChildren.forEach((child, i) => {
+        const key = keyOf(child);
+        if (key != null && !keyed.has(key)) keyed.set(key, i);
+        else if (key == null) unkeyed.push(i);
+    });
 
-            if (attr.startsWith("on")) {
-                const eventName = attr.toLowerCase();
+    const used = new Set();
+    let nextUnkeyed = 0;
 
-                node[eventName] =
-                    typeof newValue === "function" ? newValue : null;
+    const result = newChildren.map((child) => {
+        const key = keyOf(child);
+        let oldIndex;
 
-                continue;
-            }
-
-            if (newValue == null || newValue === false) {
-                node.removeAttribute(attr);
-
-                if (attr in node) {
-                    node[attr] = "";
-                }
-
-                continue;
-            }
-
-            if (attr === "style" && typeof newValue === "object") {
-                Object.assign(node.style, newValue);
-            } else if (
-                attr in node &&
-                !attr.startsWith("data-") &&
-                !attr.startsWith("aria-")
-            ) {
-                node[attr] = newValue;
-            } else {
-                node.setAttribute(
-                    attr,
-                    newValue === true ? "" : newValue
-                );
-            }
+        if (key != null) {
+            const candidate = keyed.get(key);
+            if (candidate !== undefined && !used.has(candidate)) oldIndex = candidate;
+        } else {
+            oldIndex = unkeyed[nextUnkeyed++];
         }
 
-        return node;
-    };
+        if (oldIndex === undefined || !oldNodes[oldIndex]) return render(child, namespaceOf(parent));
+
+        used.add(oldIndex);
+        return patchNode(oldChildren[oldIndex], child, oldNodes[oldIndex]);
+    });
+
+    oldNodes.forEach((node, i) => {
+        if (!used.has(i)) node.remove();
+    });
+
+    result.forEach((node, i) => {
+        if (parent.childNodes[i] !== node) {
+            parent.insertBefore(node, parent.childNodes[i] || null);
+        }
+    });
 }
 
 /**
- * @param {Array<VElement|string>} oldChildren
- * @param {Array<VElement|string>} newChildren
- *
- * @returns {Function}
+ * @param {VElement|string} child
+ * @returns {string|number|undefined}
  */
-export function diffChildren(oldChildren = [], newChildren = []) {
-    const childDiffs = [];
-    const maxLength = Math.max(oldChildren.length, newChildren.length);
-
-    for (let i = 0; i < maxLength; i++) {
-        childDiffs.push(
-            diff(oldChildren[i] ?? null, newChildren[i] ?? null)
-        );
-    }
-
-    return (node) => {
-        const domChildren = Array.from(node.childNodes);
-
-        for (let i = 0; i < childDiffs.length; i++) {
-            const oldNode = domChildren[i];
-            const newChild = newChildren[i];
-
-            if (oldNode) {
-                const updatedNode = childDiffs[i](oldNode);
-
-                if (updatedNode && newChild != null) {
-                    continue;
-                }
-            } else if (newChild != null) {
-                node.appendChild(render(newChild));
-            }
-        }
-
-        return node;
-    };
+function keyOf(child) {
+    return typeof child === "string" ? undefined : child.attrs.key ?? undefined;
 }

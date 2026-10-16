@@ -1,0 +1,9 @@
+{
+  "name": "mini-framework",
+  "version": "1.0.0",
+  "description": "A tiny framework: virtual DOM, state, routing and its own event system, with a TodoMVC.",
+  "type": "module",
+  "scripts": {
+    "start": "npx --yes serve ."
+  }
+}

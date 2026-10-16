@@ -1,46 +1,60 @@
+/**
+ * @module renderer/render
+ */
 import { VElement } from "../utils/elemant.js";
+import { applyAttrs } from "./attrs.js";
+
+/** XML namespace of SVG elements. */
+export const SVG_NS = "http://www.w3.org/2000/svg";
 
 /**
- * 
- * @param {VElement} node 
- * 
- * @returns {HTMLElement}
+ * Namespace that children of `parent` must be created in: SVG inside an
+ * `<svg>` (except inside `<foreignObject>`), plain HTML otherwise.
+ *
+ * @param {Node|null} parent - Real DOM parent.
+ * @returns {string|null} The SVG namespace, or `null` for HTML.
  */
-export function render(node) {
-
-    if (typeof node === "string") {
-        return document.createTextNode(node);
-    }
-    
-    const elem = document.createElement(node.tagsName);
-    
-    if(node.attrs) {
-        for (const [k,v] of Object.entries(node.attrs)) {
-            if (typeof v === "function") {
-                elem[`on${k}`] = v;
-            } else if (v === true) {
-                elem.setAttribute(k, '');
-            } else if (v === false || v === null) {
-                continue;
-            } else {
-                elem.setAttribute(k,String(v));
-            }
-        }
-    }
-
-    if (node.children) {
-        node.children.forEach(child => {
-            elem.appendChild(render(child));
-        })
-    }
-
-    return elem;
+export function namespaceOf(parent) {
+    return parent &&
+        parent.namespaceURI === SVG_NS &&
+        parent.localName !== "foreignObject"
+        ? SVG_NS
+        : null;
 }
 
 /**
- * 
- * @param {HTMLElement} elem 
- * @param {string} k 
- * @param {Function} v 
+ * Turns a virtual node into a real (detached) DOM node. An `svg` tag, and
+ * everything inside it, is created as a real SVG element, so
+ * `createElemant("svg", { viewBox: "0 0 10 10" }, [createElemant("circle", ...)])`
+ * just works.
+ *
+ * @param {VElement|string} node - Virtual element, or a string for a text node.
+ * @param {string|null} [parentNs=null] - Namespace inherited from the parent.
+ * @returns {Element|Text} The real DOM node.
+ * @throws {TypeError} If `node` is not a `VElement` or a string.
  */
+export function render(node, parentNs = null) {
+    if (typeof node === "string") {
+        return document.createTextNode(node);
+    }
 
+    if (!(node instanceof VElement)) {
+        throw new TypeError("render: expected a VElement or a string");
+    }
+
+    const ns = node.tagsName === "svg" ? SVG_NS : parentNs;
+    const el = ns
+        ? document.createElementNS(ns, node.tagsName)
+        : document.createElement(node.tagsName);
+
+    applyAttrs(el, {}, node.attrs, false);
+
+    const childNs = node.tagsName === "foreignObject" ? null : ns;
+    for (const child of node.children) {
+        el.appendChild(render(child, childNs));
+    }
+
+    applyAttrs(el, {}, node.attrs, true);
+
+    return el;
+}

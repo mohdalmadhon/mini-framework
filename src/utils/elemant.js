@@ -1,124 +1,174 @@
+/**
+ * @module utils/elemant
+ *
+ * The virtual DOM node class. A virtual node is a plain JavaScript object
+ * describing an element: its tag, its attributes and its children.
+ */
+import { isEventAttr } from "./events.js";
+
+/**
+ * Anything that can be passed as a child. `null`, `undefined` and booleans
+ * are ignored, numbers become text, arrays are flattened.
+ *
+ * @typedef {VElement|string|number|boolean|null|undefined|Array<any>} VChildInput
+ */
+
+/**
+ * Attribute map of a virtual element.
+ *
+ * Special attributes:
+ *  - `onClick`, `onInput`, `onKeyDown`... : event handlers (functions)
+ *  - `key`   : stable identity used to match list items between renders
+ *  - `ref`   : function called with the real DOM element after each render
+ *  - `style` : string or object (`{ backgroundColor: "red" }`)
+ *  - `value`, `checked`, `selected` : applied as live DOM properties
+ *
+ * @typedef {Object<string, string|number|boolean|Function|Object|null|undefined>} Attrs
+ */
 
 /**
  * Represents a virtual DOM element.
  *
- * Stores an HTML tag name, its attributes, and its children.
+ * Its JSON shape matches the one in the project subject:
+ * `{ tag, attrs, children }` (see {@link VElement#toJSON}).
  *
  * @class
  */
 export class VElement {
+    /** @type {string} */
     tagsName;
+    /** @type {Attrs} */
     attrs;
+    /** @type {Array<VElement|string>} */
     children;
 
     /**
      * Creates a virtual DOM element.
      *
-     * @param {string} tagsName - The HTML tag name.
-     * @param {Object} attrs - The element attributes.
-     * @param {Array<VElement>} children - The child elements.
-     * @throws {Error} if any parameter is invalid
+     * @param {string} tagsName - The HTML tag name (`"div"`, `"input"`...).
+     * @param {Attrs} [attrs={}] - The element attributes.
+     * @param {VChildInput} [children=[]] - The child elements.
+     * @throws {TypeError} If the tag, an attribute or a child is invalid.
      */
     constructor(tagsName, attrs = {}, children = []) {
-        if (
-            !this.#checkTagName(tagsName) ||
-            !this.#checkAtters(attrs) ||
-            !this.#checkChildren(children)
-        ) {
-            throw new TypeError("Invalid VElement arguments");
-        }
+        assertTagName(tagsName);
+        attrs = attrs ?? {};
+        assertAttrs(tagsName, attrs);
 
         this.tagsName = tagsName;
         this.attrs = attrs;
-        this.children = children;
+        this.children = normalizeChildren(children);
     }
 
     /**
-     * validate the virtual elemant tag name
-     * 
-     * @param {string} tagName 
-     * @returns {boolean} validated or not
+     * The `key` attribute, if any.
+     *
+     * @type {string|number|undefined}
      */
-    #checkTagName(tagName = "") {
-        if (typeof tagName !== "string" || tagName.trim().length === 0) {
-            console.error(`invalid tag name: ${tagName}`);
-            return false;
-        }
-
-        return true;
+    get key() {
+        return this.attrs.key;
     }
 
     /**
-     * checking the validation of the keys and values of an artibute. it make sure they follow
-     * the correct types and check if its a listener if its a function
-     * 
-     * @param {object} attrs 
-     * @returns {boolean} validated or not
+     * Plain-object representation: `{ tag, attrs, children }`.
+     *
+     * @returns {{tag: string, attrs: Attrs, children: Array<object|string>}}
      */
-    #checkAtters(attrs = {}) {
-        if (typeof attrs == undefined || attrs == null) return;
-        if (
-            typeof attrs !== "object" ||
-            attrs === null ||
-            Array.isArray(attrs)
-        ) {
-            console.error(`invalid attrs: ${attrs}`);
-            return false;
+    toJSON() {
+        return {
+            tag: this.tagsName,
+            attrs: this.attrs,
+            children: this.children,
+        };
+    }
+}
+
+/**
+ * Flattens and cleans a list of children.
+ *
+ * @param {VChildInput} children - Single child, or (nested) array of children.
+ * @returns {Array<VElement|string>} Only virtual elements and strings.
+ * @throws {TypeError} If a child is not a supported type.
+ */
+export function normalizeChildren(children) {
+    /** @type {Array<VElement|string>} */
+    const out = [];
+
+    const walk = (item) => {
+        if (item == null || typeof item === "boolean") return;
+
+        if (Array.isArray(item)) {
+            item.forEach(walk);
+            return;
         }
 
-        for (const [k, v] of Object.entries(attrs)) {
-            if (typeof k !== "string" || k.trim().length === 0) {
-                console.error(`invalid key attribute: ${k}`);
-                return false;
-            }
-
-            const vType = typeof v;
-
-            if (vType === "function") {
-                continue;
-            }
-
-            if (
-                vType !== "string" &&
-                vType !== "boolean" &&
-                vType !== "number"
-            ) {
-                console.error(
-                    `invalid attribute value for "${k}": ${vType}`
-                );
-                return false;
-            }
-
-            if (vType === "number" && !Number.isFinite(v)) {
-                console.error(`invalid number for attribute "${k}"`);
-                return false;
-            }
+        if (item instanceof VElement || typeof item === "string") {
+            out.push(item);
+            return;
         }
 
-        return true;
+        if (typeof item === "number" && Number.isFinite(item)) {
+            out.push(String(item));
+            return;
+        }
+
+        throw new TypeError(`Invalid child: ${String(item)} (${typeof item})`);
+    };
+
+    walk(children);
+    return out;
+}
+
+/**
+ * @param {*} tagName
+ * @throws {TypeError}
+ */
+function assertTagName(tagName) {
+    if (typeof tagName !== "string" || tagName.trim().length === 0) {
+        throw new TypeError(`Invalid tag name: ${String(tagName)}`);
+    }
+}
+
+/**
+ * @param {string} tag - Used in error messages.
+ * @param {*} attrs
+ * @throws {TypeError}
+ */
+function assertAttrs(tag, attrs) {
+    if (typeof attrs !== "object" || Array.isArray(attrs)) {
+        throw new TypeError(`<${tag}>: attrs must be an object`);
     }
 
-    /**
-     * checking the children of a virtual elemant by checking if they are an instance of VElemant class
-     * or if it is a string
-     * 
-     * @param {Array<VElement>} children 
-     * @returns {boolean} validated or not
-     */
-    #checkChildren(children = []) {
-        if (typeof children === "undefined" || children === null) return;
-        if (!Array.isArray(children)) {
-            console.error("children must be an array");
-            return false;
+    for (const [name, value] of Object.entries(attrs)) {
+        if (name.trim().length === 0) {
+            throw new TypeError(`<${tag}>: empty attribute name`);
         }
 
-        for (const child of children) {
-            if (!(child instanceof VElement) && typeof child !== "string") {
-                console.error(`invalid element child: ${child}`);
-                return false;
-            }
+        if (value == null) continue;
+
+        const type = typeof value;
+
+        if (type === "function") {
+            if (name === "ref" || isEventAttr(name)) continue;
+            throw new TypeError(
+                `<${tag}>: attribute "${name}" cannot be a function ` +
+                    `(event handlers are named onClick, onInput, ...)`
+            );
         }
 
-        return true;
+        if (isEventAttr(name)) {
+            throw new TypeError(`<${tag}>: "${name}" must be a function`);
+        }
+
+        if (name === "style" && type === "object" && !Array.isArray(value)) {
+            continue;
+        }
+
+        if (type === "string" || type === "boolean") continue;
+        if (type === "number" && Number.isFinite(value)) continue;
+
+        throw new TypeError(
+            `<${tag}>: invalid value for attribute "${name}" (${type})`
+        );
     }
 }
