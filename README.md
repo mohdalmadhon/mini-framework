@@ -25,8 +25,9 @@ Open the printed address (for example `http://localhost:3000`): the TOIO todo ap
 ```
 mini-framework/
 ├── index.html          # the app page (runs from the root)
-├── main.js             # starts the app
-├── toio/               # TOIO app: app.js, icons.js (SVG), toio.css
+├── 404.html            # shown by `npx serve` for a real URL that does not exist
+├── main.js             # starts the app + router (#/ = app, anything else = error page)
+├── toio/               # TOIO app: app.js, files.js (photos/documents), pages.js (error page), icons.js (SVG), toio.css
 └── src/                # the framework
     ├── index.js        # public API (import everything from here)
     ├── renderer/       # create_elemant, render, diffing, mount, attrs
@@ -216,7 +217,7 @@ All functions are documented with JSDoc in `src/`.
 - A component must be fast and free of side effects: it can be called after every state change.
 - Don't change the framework's DOM by hand (e.g. `appendChild` inside `#app`); the diff assumes it owns it.
 - Only events that have an `on<type>` property are supported (all common ones).
-- Hash routing only (`#/path`). The router is part of the framework but TOIO is a single page, so it does not use it.
+- Hash routing only (`#/path`). The router is part of the framework but TOIO uses it for two routes: `#/` (the app) and the error page for any unknown path.
 
 ## The TOIO app
 
@@ -225,3 +226,15 @@ All functions are documented with JSDoc in `src/`.
 - add a task with a **title**, a **description**, a **color** (preset swatches or the native color picker) and an **SVG icon** (8 icons drawn with `createElemant`, see `toio/icons.js`)
 - remove one task, **Remove all**, **Done all** (check all) and **Undone all** (uncheck all)
 - tasks are saved to **localStorage** on every state change (`subscribe` in `toio/app.js`) and restored on load
+- **limits**: a title is at most 50 characters and a description at most 200 (live counters in the form)
+- every task is **one row of the same size**; long titles/descriptions are cut on the card ("View full") and the whole task opens in a **dialog** (click the card; close with Esc, the X, or by clicking outside)
+- **10 tasks per page** with Prev / numbered / Next buttons
+- **search** by title or description (filters all pages, shows the number found)
+- **attachments**: add photos and documents (up to 6 per task, 1.5 MB per document) from the form or from a task's dialog, with the file button or by dragging files in. Photos are shrunk to 1280 px (JPEG) and everything is saved in localStorage with the task. Click a photo to open the viewer (arrow keys browse, Esc closes); click a document to download it
+- **interactive**: filter tabs (All / Active / Done), progress bar, edit a task in its dialog, **Undo** after removing, keyboard shortcuts (`/` search, `n` new task, `Esc` close)
+- **responsive**: phones to wide desktops; on small screens the dialog becomes a bottom sheet and tap targets grow on touch screens
+- **pets**: seven cute SVG creatures (`toio/pets.js`) you can grab and move anywhere; they never move on their own and positions are remembered
+- **empty state**: with no tasks, a big "Add a task" button appears
+- **celebration**: a confetti popup (`toio/celebrate.js`) when every task is done or the list is cleared
+- **logo**: `toio/logo.svg` is the tab icon and is also drawn in the header
+- **error page**: unknown `#/paths` (and app crashes) show a styled page with **Back to home**
