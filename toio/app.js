@@ -5,25 +5,27 @@ import {
     PlusIcon,
     CheckIcon,
     CloseIcon,
-    SearchIcon,
     PaperclipIcon,
     FileIcon,
     DownloadIcon,
     EditIcon,
     UndoIcon,
-    Logo,
 } from "./icons.js";
 import { Pets } from "./pets.js";
 import { Celebration, celebrate } from "./celebrate.js";
 import { MAX_FILES, STORAGE_LIMIT, ACCEPT, formatSize, isImage, prepareFile, downloadAttachment } from "./files.js";
+import { TaskCard } from "./components/TaskCard.js";
+import { TaskHeader } from "./components/TaskHeader.js";
+import { TaskToolbar } from "./components/TaskToolbar.js";
+import { TaskFilters } from "./components/TaskFilters.js";
+import { TaskPagination } from "./components/TaskPagination.js";
+import { stamp, textColorFor } from "./task-utils.js";
 
 const STORAGE_KEY = "toio-tasks";
 const SWATCHES = ["#b4f2dd", "#ffd58a", "#ffb4a8", "#c9c4ff", "#9fd8ff", "#f7a8d8"];
 
 const TITLE_MAX = 50;
 const DESC_MAX = 200;
-const TITLE_PREVIEW = 32;
-const DESC_PREVIEW = 80;
 const PAGE_SIZE = 10;
 
 function loadTasks() {
@@ -281,27 +283,10 @@ on("keydown", (e) => {
     }
 });
 
-const preview = (text, max) => {
-    const flat = text.replace(/\s+/g, " ").trim();
-    return flat.length > max ? `${flat.slice(0, max).trimEnd()}...` : flat;
-};
-
-const isCut = (t) => t.title.length > TITLE_PREVIEW || t.description.length > DESC_PREVIEW || t.description.includes("\n");
-
-export function textColorFor(hex) {
-    const n = parseInt(hex.slice(1), 16);
-    const luma = 0.299 * (n >> 16) + 0.587 * ((n >> 8) & 255) + 0.114 * (n & 255);
-    return luma > 150 ? "#1f3a3d" : "#ffffff";
-}
+export { textColorFor };
 
 const dayLabel = (d) =>
     `${d.toLocaleDateString("en-US", { weekday: "short" })} - ${d.toLocaleDateString("en-US", { month: "short", day: "numeric" })}`;
-
-const stamp = (ts) => {
-    const d = new Date(ts);
-    const time = d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
-    return `${time} ${d.toLocaleDateString("en-US", { weekday: "short" })} (${d.toLocaleDateString("en-US", { month: "short", day: "numeric" })})`;
-};
 
 const counterClass = (length, max) => (length >= max * 0.9 ? "counter warn" : "counter");
 
@@ -518,85 +503,6 @@ export function ToioApp() {
             ]),
         ]);
 
-    const TaskCard = (t) => {
-        const files = t.attachments ?? [];
-        const thumb = files.find(isImage);
-
-        return h(
-            "article",
-            {
-                key: t.id,
-                class: t.done ? "task done" : "task",
-                style: { backgroundColor: t.color, color: textColorFor(t.color) },
-            },
-            [
-                h(
-                    "button",
-                    {
-                        key: "check",
-                        type: "button",
-                        class: t.done ? "check checked" : "check",
-                        "aria-label": t.done ? "Mark as undone" : "Mark as done",
-                        onClick: () => toggleTask(t.id),
-                    },
-                    [CheckIcon(16)]
-                ),
-                h(
-                    "div",
-                    {
-                        key: "body",
-                        class: "body",
-                        role: "button",
-                        tabindex: "0",
-                        title: "View task",
-                        "aria-label": `View ${t.title}`,
-                        onClick: () => openTask(t.id),
-                        onKeyDown: (e) => {
-                            if (e.key === "Enter" || e.key === " ") {
-                                e.preventDefault();
-                                openTask(t.id);
-                            }
-                        },
-                    },
-                    [
-                        h("h2", { class: "title" }, [preview(t.title, TITLE_PREVIEW)]),
-                        h("p", { class: "desc" }, [t.description ? preview(t.description, DESC_PREVIEW) : ""]),
-                        h("p", { class: "when" }, [
-                            h("span", { class: "stamp" }, [stamp(t.createdAt)]),
-                            files.length ? h("span", { class: "chip" }, [PaperclipIcon(12), String(files.length)]) : null,
-                            isCut(t) ? h("span", { class: "more" }, ["View full"]) : null,
-                        ]),
-                    ]
-                ),
-                thumb
-                    ? h(
-                          "button",
-                          {
-                              key: "thumb",
-                              type: "button",
-                              class: "card-thumb",
-                              "aria-label": `View photo ${thumb.name}`,
-                              onClick: () => (photo.value = { taskId: t.id, attId: thumb.id }),
-                          },
-                          [h("img", { src: thumb.data, alt: "" })]
-                      )
-                    : null,
-                t.icon && ICONS[t.icon] ? h("div", { key: "icon", class: "task-icon" }, [ICONS[t.icon](46)]) : null,
-                h(
-                    "button",
-                    {
-                        key: "remove",
-                        type: "button",
-                        class: "remove",
-                        "aria-label": `Remove ${t.title}`,
-                        onClick: () => removeTask(t.id),
-                    },
-                    [CloseIcon(14)]
-                ),
-            ]
-        );
-    };
-
     const TaskDialog = (t) => {
         const e = edit.value;
         const color = e ? e.color : t.color;
@@ -714,135 +620,40 @@ export function ToioApp() {
         );
     };
 
-    const Pagination = () => {
-        const first = Math.max(1, Math.min(currentPage - 2, pageCount - 4));
-        const last = Math.min(pageCount, first + 4);
-        const numbers = [];
-        for (let n = first; n <= last; n++) numbers.push(n);
-
-        return h("nav", { class: "pager", "aria-label": "Pages" }, [
-            h("button", { type: "button", class: "btn", disabled: currentPage === 1, onClick: () => goTo(currentPage - 1) }, ["Prev"]),
-            ...numbers.map((n) =>
-                h(
-                    "button",
-                    {
-                        key: n,
-                        type: "button",
-                        class: n === currentPage ? "btn page current" : "btn page",
-                        "aria-label": `Page ${n}`,
-                        "aria-current": n === currentPage ? "page" : null,
-                        onClick: () => goTo(n),
-                    },
-                    [String(n)]
-                )
-            ),
-            h(
-                "button",
-                { type: "button", class: "btn", disabled: currentPage === pageCount, onClick: () => goTo(currentPage + 1) },
-                ["Next"]
-            ),
-        ]);
-    };
-
     const toast = notice.value;
 
     return h("div", { class: "app" }, [
-        h("header", { class: "top" }, [
-            h("div", { class: "brand", title: "TOIO" }, [Logo(54)]),
-            h("div", { class: "top-text" }, [
-                h("h1", {}, [h("span", { class: "today" }, ["Today"]), ` ${dayLabel(new Date())}`]),
-                h("p", { class: "summary" }, [`${doneCount} of ${list.length} done`]),
-                h(
-                    "div",
-                    {
-                        class: "progress",
-                        role: "progressbar",
-                        "aria-label": "Tasks done",
-                        "aria-valuemin": "0",
-                        "aria-valuemax": "100",
-                        "aria-valuenow": String(percent),
-                    },
-                    [h("div", { class: "progress-bar", style: { width: `${percent}%` } })]
-                ),
-            ]),
-            h(
-                "button",
-                {
-                    type: "button",
-                    class: showForm.value ? "add-btn open" : "add-btn",
-                    "aria-label": "Add a task",
-                    title: "Add a task (n)",
-                    onClick: toggleForm,
-                },
-                [PlusIcon()]
-            ),
-        ]),
-        h("section", { class: "toolbar" }, [
-            h("button", { type: "button", class: "btn", disabled: doneCount === 0, onClick: () => setAll(false) }, ["Undone all"]),
-            h(
-                "button",
-                {
-                    type: "button",
-                    class: "btn primary",
-                    disabled: list.length === 0 || doneCount === list.length,
-                    onClick: () => setAll(true),
-                },
-                ["Done all", CheckIcon(18)]
-            ),
-            h("button", { type: "button", class: "btn danger", disabled: list.length === 0, onClick: removeAll }, ["Remove all"]),
-        ]),
-        h("section", { class: "controls" }, [
-            h("div", { class: "search" }, [
-                h("span", { class: "search-icon" }, [SearchIcon(18)]),
-                h("input", {
-                    class: "search-input",
-                    type: "search",
-                    placeholder: "Search tasks (press /)",
-                    "aria-label": "Search tasks",
-                    value: query.value,
-                    onInput: (e) => setQuery(e.target.value),
-                    onKeyDown: (e) => {
-                        if (e.key === "Escape") {
-                            setQuery("");
-                            e.target.blur();
-                        }
-                    },
-                    ref: (el) => (searchEl = el),
-                }),
-                query.value
-                    ? h(
-                          "button",
-                          { type: "button", class: "search-clear", "aria-label": "Clear search", onClick: () => setQuery("") },
-                          [CloseIcon(14)]
-                      )
-                    : null,
-                needle ? h("span", { class: "found" }, [`${filtered.length} found`]) : null,
-            ]),
-            h(
-                "div",
-                { class: "tabs", role: "group", "aria-label": "Filter tasks" },
-                [
-                    ["all", "All", list.length],
-                    ["active", "Active", list.length - doneCount],
-                    ["done", "Done", doneCount],
-                ].map(([key, label, count]) =>
-                    h(
-                        "button",
-                        {
-                            key,
-                            type: "button",
-                            class: tab === key ? "tab current" : "tab",
-                            "aria-pressed": String(tab === key),
-                            onClick: () => setFilter(key),
-                        },
-                        [label, h("span", { class: "count" }, [String(count)])]
-                    )
-                )
-            ),
-        ]),
+        TaskHeader({
+            doneCount,
+            total: list.length,
+            percent,
+            formOpen: showForm.value,
+            onAdd: toggleForm,
+            dateLabel: dayLabel(new Date()),
+        }),
+        TaskToolbar({ doneCount, total: list.length, onSetAll: setAll, onRemoveAll: removeAll }),
+        TaskFilters({
+            query: query.value,
+            needle,
+            filter: tab,
+            total: list.length,
+            doneCount,
+            filteredCount: filtered.length,
+            onQueryChange: setQuery,
+            onFilterChange: setFilter,
+            onSearchRef: (el) => (searchEl = el),
+        }),
         h("main", { class: "list" }, [
             showForm.value ? Form() : null,
-            ...pageTasks.map(TaskCard),
+            ...pageTasks.map((task) =>
+                TaskCard({
+                    task,
+                    onToggle: toggleTask,
+                    onOpen: openTask,
+                    onRemove: removeTask,
+                    onOpenPhoto: (taskId, attId) => (photo.value = { taskId, attId }),
+                })
+            ),
             list.length === 0 && !showForm.value
                 ? h("div", { key: "empty", class: "empty-state" }, [
                       h(
@@ -867,7 +678,7 @@ export function ToioApp() {
                   ])
                 : null,
         ]),
-        pageCount > 1 ? Pagination() : null,
+        pageCount > 1 ? TaskPagination({ currentPage, pageCount, onPageChange: goTo }) : null,
         viewed ? TaskDialog(viewed) : null,
         Lightbox(),
         Celebration(),

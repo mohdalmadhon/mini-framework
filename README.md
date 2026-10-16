@@ -9,7 +9,7 @@ A small JavaScript framework written from scratch (no React, Angular, Vue or sim
 | **Routing** | The URL hash (`#/about`) is kept in sync with the state. |
 | **Event handling** | Its own event system (not `addEventListener`) for elements and for global events such as keybindings and scrolling. |
 
-A **TodoMVC** built with the framework is included (it runs from the root).
+**toio**, a task app built with the framework, is included (it runs from the root).
 
 ## Run it
 
@@ -20,21 +20,20 @@ cd todo_list
 npx serve .            # or: python3 -m http.server 8080
 ```
 
-Open the printed address (for example `http://localhost:3000`): the TodoMVC runs from the root.
+Open the printed address (for example `http://localhost:3000`): toio runs from the root.
 
 ```
 todo_list/
 ├── index.html          # the app page (runs from the root)
 ├── 404.html            # shown by `npx serve` for a real URL that does not exist
-├── main.js             # starts the app + router (#/, #/active, #/completed; anything else = 404 page)
-├── todomvc/            # the TodoMVC
-│   ├── app.js          # assembles the page from the components
-│   ├── constants.js    # storage key, keys, filters
-│   ├── storage.js      # localStorage load/save
-│   ├── store.js        # global state (todos, editing, draft) and the actions on it
-│   ├── components/     # Header, Main, TodoItem, Footer, Info, NotFound
-│   └── todomvc.css
-├── toio/               # a second demo app, served at /toio/ (index.html, main.js, app.js, ...)
+├── main.js             # starts toio and its 404 route
+├── toio/               # the task app
+│   ├── app.js          # state and app composition
+│   ├── components/     # task cards, header, filters, toolbar and pagination
+│   ├── files.js        # attachment handling
+│   ├── pets.js         # draggable pets
+│   ├── toio.css
+│   └── ...
 └── src/                # the framework
     ├── index.js        # public API (import everything from here)
     ├── renderer/       # create_elemant, render, diffing, mount, attrs
@@ -224,18 +223,16 @@ All functions are documented with JSDoc in `src/`.
 - A component must be fast and free of side effects: it can be called after every state change.
 - Don't change the framework's DOM by hand (e.g. `appendChild` inside `#app`); the diff assumes it owns it.
 - Only events that have an `on<type>` property are supported (all common ones).
-- Hash routing only (`#/path`). The TodoMVC uses three routes (`#/`, `#/active`, `#/completed`) plus the 404 page for any unknown path.
+- Hash routing only (`#/path`). toio runs at `#/`; unknown paths show the 404 page.
 
-## The TodoMVC app
+## The toio app
 
-`index.html` runs the TodoMVC. The code is split by role inside `todomvc/` (see the tree above) and uses every part of the framework. It has the same markup and class names as the official examples (`todoapp`, `new-todo`, `toggle-all`, `todo-list`, `toggle`, `destroy`, `edit`, `footer`, `todo-count`, `filters`, `clear-completed`, `info`).
+`index.html` runs toio. Its UI is split into reusable components inside `toio/components/`, while `toio/app.js` owns task state and actions.
 
-- **Add** a todo: type in `.new-todo` and press Enter. The `main` section and the `footer` only appear once there is at least one todo.
-- **Check/uncheck** one todo with its checkbox, or all of them with `toggle-all`.
-- **Remove** a todo with the `×` button (shown on hover) and **Clear completed** removes only the checked ones (the button only appears if one is checked).
-- **Counter**: `.todo-count` shows the number of unchecked todos (`1 item left` / `N items left`).
-- **Filters**: All / Active / Completed are routes (`#/`, `#/active`, `#/completed`), so the URL changes. The selected link gets the class `selected`.
-- **Edit**: double-click a todo (`onDblClick`) to edit it. Enter or leaving the field saves, Escape cancels, and an empty text removes the todo.
-- The todos are saved in `localStorage` with `subscribe` and restored on load.
+- Add tasks with a title, description, color, icon and attachments.
+- Search tasks, filter by All / Active / Done, and browse paginated results.
+- Open, edit, complete and remove tasks; removed tasks can be restored with Undo.
+- Tasks and attachments are saved in `localStorage` under `toio-tasks`.
+- The app also includes photo previews, keyboard shortcuts, celebration effects and draggable pets.
 
-The framework features used: `createElemant` (every element), `ref` (`todos`, `editing`, `draft` are global state), `Router` (the three filter routes) and the `onKeyDown` / `onChange` / `onClick` / `onDblClick` / `onBlur` event attributes.
+The framework features used include `createElemant`, reactive refs, hash routing, and the event system.
