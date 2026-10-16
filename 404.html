@@ -5,20 +5,62 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>mini-framework • Page not found</title>
-    <link rel="icon" type="image/svg+xml" href="/todo/assets/logo.svg">
-    <link rel="stylesheet" href="/todo/styles/base.css">
-    <link rel="stylesheet" href="/todo/styles/decor.css">
+    <style>
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: grid;
+            place-items: center;
+            padding: 24px 16px;
+            box-sizing: border-box;
+            background: #2b8f89;
+            font-family: "Nunito", "Segoe UI", system-ui, sans-serif;
+            color: #1f3a3d;
+        }
+        .card {
+            width: min(480px, 100%);
+            padding: 36px 24px;
+            text-align: center;
+            background: #f1fffa;
+            border-radius: 28px;
+            box-shadow: 0 8px 0 rgba(0, 0, 0, .25);
+        }
+        .code {
+            margin: 0;
+            font-size: 96px;
+            line-height: 1;
+            font-weight: 800;
+            color: #2b8f89;
+            text-shadow: 0 5px 0 #ffd58a;
+        }
+        h1 { margin: 14px 0 6px; font-size: 26px; }
+        p { margin: 0; opacity: .85; }
+        a {
+            display: inline-block;
+            margin-top: 24px;
+            padding: 10px 18px;
+            border: 2px solid #1f3a3d;
+            border-radius: 14px;
+            background: #ffd58a;
+            color: #1f3a3d;
+            font-weight: 800;
+            text-decoration: none;
+            box-shadow: 0 3px 0 rgba(0, 0, 0, .25);
+        }
+    </style>
 </head>
 
 <body>
-    <main class="error-page">
-        <div class="error-card" role="alert">
-            <p class="error-code">404</p>
-            <h1 class="error-title">Page not found</h1>
-            <p class="error-msg">This page does not exist.</p>
-            <div class="error-actions"><a class="btn primary" href="/">Back to the list</a></div>
-        </div>
+    <main class="card" role="alert">
+        <p class="code">404</p>
+        <h1>Page not found</h1>
+        <p>This page does not exist.</p>
+        <a id="home" href="/">Back to the list</a>
     </main>
+    <script>
+        const repo = location.hostname.endsWith("github.io") ? location.pathname.split("/")[1] : "";
+        document.getElementById("home").href = repo ? `/${repo}/` : "/";
+    </script>
 </body>
 
 </html>
