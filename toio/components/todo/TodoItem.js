@@ -1,4 +1,4 @@
-import { createElemant as h } from "../../src/index.js";
+import { createElemant as h } from "../../../src/index.js";
 
 export function TodoItem({ todo, editing, title, onToggle, onRemove, onStartEdit, onUpdateEdit, onSaveEdit, onCancelEdit }) {
     return h(
@@ -17,7 +17,16 @@ export function TodoItem({ todo, editing, title, onToggle, onRemove, onStartEdit
                     onChange: () => onToggle(todo.id),
                 }),
                 h("label", { onDblClick: () => onStartEdit(todo) }, [todo.title]),
-                h("button", { class: "destroy", type: "button", "aria-label": `Delete ${todo.title}`, onClick: () => onRemove(todo.id) }, []),
+                h(
+                    "button",
+                    {
+                        class: "destroy",
+                        type: "button",
+                        "aria-label": `Delete ${todo.title}`,
+                        onClick: () => onRemove(todo.id),
+                    },
+                    []
+                ),
             ]),
             editing
                 ? h("input", {

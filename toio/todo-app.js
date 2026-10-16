@@ -13,18 +13,18 @@ import {
     toggleTodo,
     todos,
     updateEdit,
-} from "./store.js";
-import { Footer } from "./components/Footer.js";
-import { Header } from "./components/Header.js";
-import { Info } from "./components/Info.js";
-import { Main } from "./components/Main.js";
+} from "./todo-store.js";
+import { Footer } from "./components/todo/Footer.js";
+import { Header } from "./components/todo/Header.js";
+import { Info } from "./components/todo/Info.js";
+import { Main } from "./components/todo/Main.js";
 
-export function TodoApp({ path }) {
+export function ToioTodoApp({ path }) {
     const list = todos.value;
     const activeCount = list.filter((todo) => !todo.completed).length;
     const completedCount = list.length - activeCount;
 
-    return h("section", { class: "todoapp" }, [
+    return h("section", { class: "todoapp toio-todoapp" }, [
         Header({
             value: newTodo.value,
             onInput: (value) => (newTodo.value = value),
@@ -50,20 +50,15 @@ export function TodoApp({ path }) {
               })
             : null,
         list.length > 0
-            ? Footer({
-                  activeCount,
-                  completedCount,
-                  path,
-                  onClearCompleted: clearCompleted,
-              })
+            ? Footer({ activeCount, completedCount, path, onClearCompleted: clearCompleted })
             : null,
         Info(),
     ]);
 }
 
 export function NotFound() {
-    return h("section", { class: "todoapp" }, [
-        h("header", { class: "header" }, [h("h1", {}, ["todos"])]),
-        h("p", { class: "not-found" }, ["Page not found. ", h("a", { href: "#/" }, ["Back to the list"])]),
+    return h("section", { class: "todoapp toio-todoapp" }, [
+        h("header", { class: "header" }, [h("h1", {}, ["toio"])]),
+        h("p", { class: "not-found" }, ["Page not found. ", h("a", { href: "#/" }, ["Back to toio"])]),
     ]);
 }

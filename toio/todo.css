@@ -1,0 +1,137 @@
+:root {
+    --teal: #2b8f89;
+    --teal-dark: #1f6f6b;
+    --mint: #b4f2dd;
+    --yellow: #ffd58a;
+    --ink: #1f3a3d;
+    --dark: #2f3037;
+    --paper: #f1fffa;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+html {
+    -webkit-text-size-adjust: 100%;
+}
+
+body {
+    min-height: 100vh;
+    min-height: 100dvh;
+    margin: 0;
+    background: var(--teal);
+    color: var(--ink);
+    font-family: "Nunito", "Segoe UI", system-ui, -apple-system, sans-serif;
+    overflow-x: hidden;
+}
+
+body::before,
+body::after {
+    content: "";
+    position: fixed;
+    z-index: 0;
+    pointer-events: none;
+}
+
+body::before {
+    top: -12vmin;
+    right: -10vmin;
+    width: clamp(200px, 42vmin, 440px);
+    aspect-ratio: 1;
+    border-radius: 55% 45% 40% 60%;
+    background: var(--dark);
+}
+
+body::after {
+    bottom: -14vmin;
+    left: -9vmin;
+    width: clamp(180px, 38vmin, 400px);
+    aspect-ratio: 1;
+    border-radius: 60% 40% 55% 45%;
+    background: var(--yellow);
+    opacity: .9;
+}
+
+.toio-todoapp {
+    z-index: 1;
+    max-width: 640px;
+    margin: 110px auto 40px;
+    overflow: visible;
+    border: 2px solid var(--dark);
+    border-radius: 18px;
+    background: var(--paper);
+    box-shadow: 0 12px 0 rgba(0, 0, 0, .22);
+}
+
+.toio-todoapp h1 {
+    top: -92px;
+    color: var(--yellow);
+    font-size: 66px;
+    font-weight: 900;
+    letter-spacing: .04em;
+    text-shadow: 3px 4px 0 var(--teal-dark);
+}
+
+.toio-todoapp .header .new-todo {
+    border-radius: 16px 16px 0 0;
+    background: var(--paper);
+    color: var(--ink);
+}
+
+.toio-todoapp .new-todo::placeholder {
+    color: #78918c;
+}
+
+.toio-todoapp .main > label::before {
+    color: var(--teal);
+}
+
+.toio-todoapp .todo-list li {
+    border-color: #d3e6df;
+}
+
+.toio-todoapp .todo-list li .toggle {
+    accent-color: var(--teal);
+}
+
+.toio-todoapp .todo-list li.completed label {
+    color: #95aaa4;
+}
+
+.toio-todoapp .todo-list li .destroy {
+    color: #d26767;
+}
+
+.toio-todoapp .footer {
+    min-height: 54px;
+    border-color: #d3e6df;
+    color: var(--ink);
+}
+
+.toio-todoapp .footer::before {
+    display: none;
+}
+
+.toio-todoapp .filters a:hover,
+.toio-todoapp .filters a.selected {
+    border-color: var(--teal);
+}
+
+.toio-todoapp .clear-completed {
+    color: var(--teal-dark);
+}
+
+.toio-todoapp .info {
+    color: #d9f7ef;
+}
+
+.toio-todoapp .info p {
+    margin: 5px;
+}
+
+@media (max-width: 680px) {
+    .toio-todoapp {
+        margin: 100px 12px 30px;
+    }
+}

@@ -1,4 +1,4 @@
-import { createElemant as h } from "../../src/index.js";
+import { createElemant as h } from "../../../src/index.js";
 
 const FILTERS = [
     ["/", "All"],
@@ -16,9 +16,7 @@ export function Footer({ activeCount, completedCount, path, onClearCompleted }) 
             "ul",
             { class: "filters" },
             FILTERS.map(([route, label]) =>
-                h("li", {}, [
-                    h("a", { href: `#${route}`, class: path === route ? "selected" : null }, [label]),
-                ])
+                h("li", {}, [h("a", { href: `#${route}`, class: path === route ? "selected" : null }, [label])])
             )
         ),
         completedCount > 0

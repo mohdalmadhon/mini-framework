@@ -1,4 +1,4 @@
-import { createElemant as h } from "../../src/index.js";
+import { createElemant as h } from "../../../src/index.js";
 
 export function Header({ value, onInput, onAdd }) {
     return h("header", { class: "header" }, [

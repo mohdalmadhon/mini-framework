@@ -1,7 +1,7 @@
 import { getState, ref, subscribe } from "../src/index.js";
 
-const STORAGE_KEY = "mini-framework-todos";
-const TODOS_KEY = "todomvc:todos";
+const STORAGE_KEY = "toio-todos";
+const TODOS_KEY = "toio:todos";
 
 function loadTodos() {
     let stored;
@@ -31,9 +31,9 @@ function loadTodos() {
 }
 
 export const todos = ref(TODOS_KEY, loadTodos());
-export const newTodo = ref("todomvc:newTodo", "");
-export const editingId = ref("todomvc:editingId", null);
-export const editingTitle = ref("todomvc:editingTitle", "");
+export const newTodo = ref("toio:newTodo", "");
+export const editingId = ref("toio:editingId", null);
+export const editingTitle = ref("toio:editingTitle", "");
 
 subscribe((key) => {
     if (key !== TODOS_KEY) return;

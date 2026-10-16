@@ -9,7 +9,7 @@ A small JavaScript framework written from scratch (no React, Angular, Vue or sim
 | **Routing** | The URL hash (`#/about`) is kept in sync with the state. |
 | **Event handling** | Its own event system (not `addEventListener`) for elements and for global events such as keybindings and scrolling. |
 
-TodoMVC, built with the framework, runs at the root. The toio task app is available at `/toio/`.
+toio, a task app built with the framework, runs at the root. A feature-rich task manager is also available at `/toio/`.
 
 ## Run it
 
@@ -20,19 +20,19 @@ cd todo_list
 npx serve .            # or: python3 -m http.server 8080
 ```
 
-Open the printed address (for example `http://localhost:3000`): TodoMVC runs from the root.
+Open the printed address (for example `http://localhost:3000`): toio runs from the root.
 
 ```
 todo_list/
 ├── index.html          # the app page (runs from the root)
 ├── 404.html            # shown by `npx serve` for a real URL that does not exist
-├── main.js             # starts TodoMVC and its routes
-├── todomvc/            # the TodoMVC
-│   ├── app.js          # assembles the app from components
-│   ├── store.js        # todo state and actions
-│   ├── components/     # header, todo item, main, footer and info
-│   └── todomvc.css
-├── toio/               # a second task app, served at /toio/
+├── main.js             # starts toio and its filter routes
+├── toio/               # the task app
+│   ├── todo-app.js     # TodoMVC-style tasks at the root
+│   ├── todo-store.js   # todo state and actions
+│   ├── components/     # task and todo UI components
+│   ├── todo.css
+│   └── app.js          # feature-rich task manager at /toio/
 └── src/                # the framework
     ├── index.js        # public API (import everything from here)
     ├── renderer/       # create_elemant, render, diffing, mount, attrs
@@ -222,21 +222,21 @@ All functions are documented with JSDoc in `src/`.
 - A component must be fast and free of side effects: it can be called after every state change.
 - Don't change the framework's DOM by hand (e.g. `appendChild` inside `#app`); the diff assumes it owns it.
 - Only events that have an `on<type>` property are supported (all common ones).
-- Hash routing only (`#/path`). TodoMVC filters use `#/`, `#/active` and `#/completed`; unknown paths show the 404 page.
-
-## The TodoMVC app
-
-`index.html` runs TodoMVC. Its UI is split into reusable components inside `todomvc/components/`, while `todomvc/store.js` owns todo state and actions.
-
-- Add todos by entering a title and pressing Enter.
-- Check or uncheck individual todos or mark them all complete.
-- Remove individual todos and clear completed todos.
-- Filter All, Active and Completed todos; the selected filter is reflected in the URL.
-- Track the number of active todos and edit a todo by double-clicking it.
-- Todos are saved in `localStorage`.
-
-The framework features used include `createElemant`, reactive refs, hash routing, and the event system.
+- Hash routing only (`#/path`). toio filters use `#/`, `#/active` and `#/completed`; unknown paths show the 404 page.
 
 ## The toio app
 
-`/toio/` runs the separate task app. It supports descriptions, colors, icons, file attachments, search, pagination, undo, celebration effects and draggable pets.
+`index.html` runs toio with a TodoMVC-style task list. The UI is split into reusable components inside `toio/components/todo/`, while `toio/todo-store.js` owns task state and actions.
+
+- Add tasks by entering a title and pressing Enter.
+- Check or uncheck individual tasks or mark them all complete.
+- Remove individual tasks and clear completed tasks.
+- Filter All, Active and Completed tasks; the selected filter is reflected in the URL.
+- Track the number of active tasks and edit one by double-clicking it.
+- Tasks are saved in `localStorage` under `toio-todos`.
+
+The framework features used include `createElemant`, reactive refs, hash routing, and the event system.
+
+## The feature-rich task manager
+
+`/toio/` runs the expanded task manager. It supports descriptions, colors, icons, file attachments, search, pagination, undo, celebration effects and draggable pets.

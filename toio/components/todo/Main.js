@@ -1,4 +1,4 @@
-import { createElemant as h } from "../../src/index.js";
+import { createElemant as h } from "../../../src/index.js";
 import { TodoItem } from "./TodoItem.js";
 
 export function Main({
