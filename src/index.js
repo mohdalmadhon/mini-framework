@@ -1,4 +1,7 @@
-/** Public entry point of the mini-framework. */
+/**
+ * everything the framework gives you, import it from here.
+ * @module mini-framework
+ */
 export { createElemant, h } from "./renderer/create_elemant.js";
 export { VElement } from "./utils/elemant.js";
 export { build, mount, rerender } from "./renderer/mount.js";

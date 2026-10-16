@@ -1,41 +1,32 @@
-/** The global state store. */
-
-/**
- * Called every time a state value changes.
- * @param {string} key - The key that changed.
- * @param {*} value - Its new value.
- * @returns {void}
- */
-
-/** The store itself: state key to value. */
+/** the global state: key to value. */
 export const componentStates = new Map();
 
-/** Functions to call when the state changes. */
+/** the functions to call when the state changes. */
 const listeners = new Set();
 
 /**
- * Reads a value from the global state.
- * @param {string} key - State key.
- * @param {*} [fallback] - Returned when the key does not exist.
- * @returns {*} The stored value, or `fallback`.
+ * read a value from the state.
+ * @param {string} key - the state key.
+ * @param {*} [fallback] - what you get if the key is not there.
+ * @returns {*} the value, or the fallback.
  */
 export function getState(key, fallback) {
     return componentStates.has(key) ? componentStates.get(key) : fallback;
 }
 
 /**
- * Tells whether a key exists in the state.
- * @param {string} key - State key.
- * @returns {boolean} `true` if the key exists.
+ * check if a key is in the state.
+ * @param {string} key - the state key.
+ * @returns {boolean} true if it is there.
  */
 export function hasState(key) {
     return componentStates.has(key);
 }
 
 /**
- * Sets a key only if it does not exist yet, WITHOUT notifying subscribers.
- * @param {string} key - State key.
- * @param {*} value - Initial value.
+ * set a key only if it is not there yet. it does not render again.
+ * @param {string} key - the state key.
+ * @param {*} value - the first value.
  * @returns {void}
  */
 export function initState(key, value) {
@@ -43,9 +34,10 @@ export function initState(key, value) {
 }
 
 /**
- * Writes a value to the global state and notifies subscribers (which schedules a re-render).
- * @param {string} key - State key.
- * @param {*} value - New value.
+ * change a value in the state and tell everyone (the app renders again).
+ * nothing happens if the value is the same.
+ * @param {string} key - the state key.
+ * @param {*} value - the new value.
  * @returns {void}
  */
 export function setState(key, value) {
@@ -58,9 +50,9 @@ export function setState(key, value) {
 }
 
 /**
- * Calls `listener` every time any state value changes.
- * @param {StateListener} listener - Function called with the key and the new value.
- * @returns {function} A function that stops the subscription.
+ * call a function every time the state changes.
+ * @param {function(string, *): void} listener - gets the key and the new value.
+ * @returns {function(): void} call it to stop.
  */
 export function subscribe(listener) {
     listeners.add(listener);

@@ -1,41 +1,37 @@
-/** Mounts an app into the page and keeps it in sync with the global state. */
-import { VElement, normalizeChildren } from "../utils/elemant.js";
+import { normalizeChildren } from "../utils/elemant.js";
 import { render } from "./render.js";
 import { patchChildren } from "./diffing.js";
 import { flushRefs } from "./attrs.js";
 import { subscribe } from "../state/state.js";
 
-/**
- * A component: a function returning what to show (one virtual element, or an array of them).
- * @returns {VElement|Array<VElement|string>|null}
- */
-
-/** Everything the framework remembers about the running app. */
-
-/** The running app (`null` before {@link module:renderer/mount.build} is called). */
+/** the app that is running (null before build). */
 let current = null;
 
-/** `true` while a render is already queued for the end of the current tick. */
+/** true when a render is already waiting for the end of this tick. */
 let scheduled = false;
 
 /**
- * Renders virtual nodes into a container, replacing its content.
- * @param {VElement|string|Array<VElement|string>} vnodes - What to render.
- * @param {Element} container - Real DOM element to render into.
- * @returns {Element} The container.
+ * render virtual elements inside a container, one time.
+ * it replaces what was inside.
+ * @param {VElement|string|Array<VElement|string>} vnodes - what to show.
+ * @param {Element} container - the real element to put it in.
+ * @returns {Element} the container.
  */
 export function mount(vnodes, container) {
-    container.replaceChildren(...normalizeChildren(vnodes).map(render));
+    container.replaceChildren(...normalizeChildren(vnodes).map((node) => render(node)));
     flushRefs();
     return container;
 }
 
 /**
- * Starts the app.
- * @param {Component} entry - Root component.
- * @param {string|Element} [target="#app"] - CSS selector or element to mount into.
+ * start the app.
+ * it renders the component one time, then renders it again every time the state changes.
+ * @param {function(): (VElement|Array|null)} entry - the main component.
+ * @param {string|Element} [target="#app"] - a css selector or the element to put the app in.
  * @returns {void}
- * @throws {Error} If the target element does not exist.
+ * @throws {Error} when the target is not found.
+ * @example
+ * build(() => router.view(), "#app");
  */
 export function build(entry, target = "#app") {
     const container =
@@ -59,7 +55,8 @@ export function build(entry, target = "#app") {
 }
 
 /**
- * Re-runs the root component right now and patches the DOM.
+ * render the app again right now and update only what changed.
+ * you almost never need it, changing the state does it for you.
  * @returns {void}
  */
 export function rerender() {
@@ -72,7 +69,7 @@ export function rerender() {
 }
 
 /**
- * Batches several state changes made in the same tick into one render, using a microtask.
+ * wait for the end of the tick, so many state changes give only one render.
  * @returns {void}
  */
 function scheduleRender() {

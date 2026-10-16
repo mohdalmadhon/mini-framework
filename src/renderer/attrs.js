@@ -1,14 +1,13 @@
-/** Applies virtual attributes to real DOM elements. */
 import { isEventAttr, toEventName, setHandler } from "../utils/events.js";
 
-/** Properties that describe LIVE state of a form control. */
+/** these are set on the element itself so inputs always show the state. */
 const LIVE_PROPS = new Set(["value", "checked", "selected"]);
 
-/** Queue of `ref` callbacks waiting for the DOM to be attached and patched. */
+/** ref functions waiting until the page is updated. */
 const refQueue = [];
 
 /**
- * Calls every pending `ref` callback, in the order they were queued.
+ * call all the ref functions that are waiting, in order.
  * @returns {void}
  */
 export function flushRefs() {
@@ -19,11 +18,13 @@ export function flushRefs() {
 }
 
 /**
- * Applies or updates the attributes of an element.
- * @param {Element} el - The real DOM element.
- * @param {module:utils/elemant~Attrs} oldAttrs - Previous attributes (`{}` on first render).
- * @param {module:utils/elemant~Attrs} newAttrs - Wanted attributes.
- * @param {boolean} [live=false] - `true` handles only `value`/`checked`/`selected`.
+ * put the attributes on a real element, and remove the old ones.
+ * it runs two times: first the normal ones, then value/checked/selected
+ * after the children are there (a select needs its options first).
+ * @param {Element} el - the real element.
+ * @param {object} oldAttrs - the old attributes ({} the first time).
+ * @param {object} newAttrs - the new attributes.
+ * @param {boolean} [live=false] - true to only do value/checked/selected.
  * @returns {void}
  */
 export function applyAttrs(el, oldAttrs, newAttrs, live = false) {
@@ -67,10 +68,11 @@ export function applyAttrs(el, oldAttrs, newAttrs, live = false) {
 }
 
 /**
- * Writes one live property (`value`, `checked` or `selected`) to the DOM property of the element, but only when it really differs, so the caret and the selection of an input are not disturbed.
- * @param {Element} el - The real DOM element.
- * @param {string} name - `value`, `checked` or `selected`.
- * @param {*} value - Wanted value.
+ * set value, checked or selected on the element.
+ * it only writes when it is different, so the cursor in an input does not jump.
+ * @param {Element} el - the real element.
+ * @param {string} name - value, checked or selected.
+ * @param {*} value - the new value.
  * @returns {void}
  */
 function applyLive(el, name, value) {
@@ -91,10 +93,10 @@ function applyLive(el, name, value) {
 }
 
 /**
- * Applies the `style` attribute.
- * @param {HTMLElement} el - The real DOM element.
- * @param {string|Object|null|undefined} oldV - Previous style.
- * @param {string|Object|null|undefined} newV - Wanted style.
+ * set the style. it can be text or an object like { backgroundColor: "red" }.
+ * @param {HTMLElement} el - the real element.
+ * @param {string|object|null|undefined} oldV - the old style.
+ * @param {string|object|null|undefined} newV - the new style.
  * @returns {void}
  */
 function applyStyle(el, oldV, newV) {
@@ -122,10 +124,10 @@ function applyStyle(el, oldV, newV) {
 }
 
 /**
- * Sets one inline style property.
- * @param {HTMLElement} el - The real DOM element.
- * @param {string} prop - camelCase (`backgroundColor`) or dashed (`--gap`).
- * @param {string|number} value - CSS value (`""` clears the property).
+ * set one style property.
+ * @param {HTMLElement} el - the real element.
+ * @param {string} prop - like backgroundColor, or a css variable like --gap.
+ * @param {string|number} value - the css value ("" removes it).
  * @returns {void}
  */
 function setStyleProp(el, prop, value) {

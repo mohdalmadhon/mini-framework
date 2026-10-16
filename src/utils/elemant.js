@@ -1,27 +1,24 @@
-/** The virtual DOM node class and its validation helpers. */
 import { isEventAttr } from "./events.js";
 
-/** Anything that can be passed as a child. */
-
-/** Attribute map of a virtual element. */
-
-/** Represents a virtual DOM element. */
+/**
+ * a virtual element. it is just data that says what the real element should look like.
+ */
 export class VElement {
-    /** The tag name. */
+    /** the tag name. */
     tagsName;
 
-    /** The attributes of the element. */
+    /** the attributes. */
     attrs;
 
-    /** The children, already flattened and cleaned. */
+    /** the children, already flat and clean. */
     children;
 
     /**
-     * Creates a virtual DOM element.
-     * @param {string} tagsName - The HTML tag name (`"div"`, `"input"`...).
-     * @param {Attrs} [attrs={}] - The element attributes.
-     * @param {VChildInput} [children=[]] - The child elements.
-     * @throws {TypeError} If the tag, an attribute or a child is invalid.
+     * make a virtual element and check it.
+     * @param {string} tagsName - the tag name like "div".
+     * @param {object} [attrs={}] - the attributes.
+     * @param {Array|string|VElement} [children=[]] - what goes inside.
+     * @throws {TypeError} when the tag, an attribute or a child is not valid.
      */
     constructor(tagsName, attrs = {}, children = []) {
         assertTagName(tagsName);
@@ -33,14 +30,17 @@ export class VElement {
         this.children = normalizeChildren(children);
     }
 
-    /** The `key` attribute, if any. */
+    /**
+     * the key of the element, used to match list items between renders.
+     * @returns {string|number|undefined}
+     */
     get key() {
         return this.attrs.key;
     }
 
     /**
-     * Plain-object representation: `{ tag, attrs, children }`.
-     * @returns {{tag: string, attrs: Attrs, children: Array<object|string>}}
+     * the element as a plain object { tag, attrs, children }.
+     * @returns {{tag: string, attrs: object, children: Array}}
      */
     toJSON() {
         return {
@@ -52,21 +52,15 @@ export class VElement {
 }
 
 /**
- * Flattens and cleans a list of children.
- * @param {VChildInput} children - Single child, or (nested) array of children.
- * @returns {Array<VElement|string>} Only virtual elements and strings.
- * @throws {TypeError} If a child is not a supported type.
+ * make the children flat and clean.
+ * numbers become text, null and true/false are dropped, arrays are opened.
+ * @param {*} children - one child or a list (can be nested).
+ * @returns {Array<VElement|string>} only elements and text.
+ * @throws {TypeError} when a child is not supported.
  */
 export function normalizeChildren(children) {
-    /** @type {Array<VElement|string>} */
     const out = [];
 
-    /**
-     * Visits one child (recursively for arrays) and pushes it to `out`.
-     * @param {*} item - A child, or a (nested) array of children.
-     * @returns {void}
-     * @throws {TypeError} If `item` is not a supported type.
-     */
     const walk = (item) => {
         if (item == null || typeof item === "boolean") return;
 
@@ -93,10 +87,10 @@ export function normalizeChildren(children) {
 }
 
 /**
- * Checks that a tag name is a non-empty string.
- * @param {*} tagName - Value to check.
+ * check that the tag name is a string that is not empty.
+ * @param {*} tagName - the value to check.
  * @returns {void}
- * @throws {TypeError} If it is not a non-empty string.
+ * @throws {TypeError} when it is not valid.
  */
 function assertTagName(tagName) {
     if (typeof tagName !== "string" || tagName.trim().length === 0) {
@@ -105,11 +99,13 @@ function assertTagName(tagName) {
 }
 
 /**
- * Checks an attribute map: it must be an object, names must not be empty, functions are allowed only for events and `ref`, and values must be strings, booleans, finite numbers or (for `style`) an object.
- * @param {string} tag - Used in error messages.
- * @param {*} attrs - Value to check.
+ * check the attributes.
+ * functions are only for events (onClick...) and ref.
+ * values must be text, true/false, a number, or an object for style.
+ * @param {string} tag - the tag name, for the error message.
+ * @param {*} attrs - the attributes to check.
  * @returns {void}
- * @throws {TypeError} If the map or one of its values is invalid.
+ * @throws {TypeError} when one of them is not valid.
  */
 function assertAttrs(tag, attrs) {
     if (typeof attrs !== "object" || Array.isArray(attrs)) {

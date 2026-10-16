@@ -1,13 +1,16 @@
-/** Factory used to describe the interface as virtual elements. */
 import { VElement } from "../utils/elemant.js";
 
 /**
- * Creates a virtual element.
- * @param {string} tag - HTML (or SVG) tag name.
- * @param {module:utils/elemant~Attrs|module:utils/elemant~VChildInput} [attrs] Attributes (or the children when attributes are skipped).
- * @param {module:utils/elemant~VChildInput} [children] - Child nodes.
- * @returns {VElement} A new virtual element.
- * @throws {TypeError} If an argument is invalid.
+ * make a virtual element.
+ * you can skip the attrs and pass the children right away.
+ * @param {string} tag - the tag name like "div" or "svg".
+ * @param {object|Array|string} [attrs] - the attributes, or the children if you skip them.
+ * @param {Array|string|VElement} [children] - what goes inside.
+ * @returns {VElement} the new element.
+ * @throws {TypeError} when something is not valid.
+ * @example
+ * createElemant("p", { class: "big" }, ["hello"]);
+ * createElemant("p", "hello");
  */
 export function createElemant(tag, attrs, children) {
     if (
@@ -24,5 +27,8 @@ export function createElemant(tag, attrs, children) {
     return new VElement(tag, attrs ?? {}, children ?? []);
 }
 
-/** Short alias of {@link module:renderer/create_elemant.createElemant}. */
+/**
+ * short name for createElemant.
+ * @type {typeof createElemant}
+ */
 export const h = createElemant;

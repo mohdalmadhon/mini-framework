@@ -9,7 +9,7 @@ A small JavaScript framework written from scratch (no React, Angular, Vue or sim
 | **Routing** | The URL hash (`#/about`) is kept in sync with the state. |
 | **Event handling** | Its own event system (not `addEventListener`) for elements and for global events such as keybindings and scrolling. |
 
-**toio**, a task app built with the framework, is included (it runs from the root).
+A **TodoMVC** built with the framework is included in `todo/` (it runs from the root). It has the same markup, classes, ids and routes as the official TodoMVC examples, with its own look.
 
 ## Run it
 
@@ -20,20 +20,45 @@ cd todo_list
 npx serve .            # or: python3 -m http.server 8080
 ```
 
-Open the printed address (for example `http://localhost:3000`): toio runs from the root.
+Open the printed address (for example `http://localhost:3000`): the TodoMVC runs from the root.
 
 ```
 todo_list/
-├── index.html          # the app page (runs from the root)
-├── 404.html            # shown by `npx serve` for a real URL that does not exist
-├── main.js             # starts the app + router (#/ is toio; anything else = 404 page)
-├── toio/               # the toio app: app.js, toio.css, pets, icons, files, pages
-└── src/                # the framework
-    ├── index.js        # public API (import everything from here)
-    ├── renderer/       # create_elemant, render, diffing, mount, attrs
-    ├── state/          # global store + ref
-    ├── router/         # hash router
-    └── utils/          # VElement class, event system
+├── index.html              # the app page (runs from the root)
+├── 404.html                # shown by `npx serve` for a real URL that does not exist
+├── main.js                 # starts the app + router (#/, #/active, #/completed; anything else = 404 page)
+├── todo/                   # the TodoMVC app
+│   ├── app.js              # assembles the page from the components
+│   ├── config/
+│   │   └── constants.js    # keys, LIMITS, colors, filters (every limit lives here)
+│   ├── state/              # global state + the actions that change it (no DOM code)
+│   │   ├── todos.js        # the list: add, update, toggle, remove, clear completed, undo
+│   │   ├── storage.js      # localStorage load/save, checks every saved value
+│   │   ├── composer.js     # the "new todo" form (title, description, color, icon, files)
+│   │   ├── editing.js      # inline title editing (double-click)
+│   │   ├── dialog.js       # the details dialog (edit everything of a todo)
+│   │   ├── attachments.js  # adding files, with the count / size / storage limits
+│   │   ├── viewer.js       # photo viewer
+│   │   ├── notice.js       # toast messages + Undo
+│   │   └── shortcuts.js    # Escape closes the viewer / dialog
+│   ├── components/         # functions returning virtual elements (no state logic)
+│   │   ├── Header.js  Composer.js  Main.js  TodoItem.js  Footer.js  Info.js
+│   │   ├── TaskDialog.js  Lightbox.js  Toast.js
+│   │   └── fields/         # reusable form parts: TextField, CharCount, ColorPicker, IconPicker, FileDrop, FileList
+│   ├── icons/
+│   │   ├── task-icons.js   # the 14 hand-made SVG icons a todo can have
+│   │   └── ui-icons.js     # small button icons + 404 drawing
+│   ├── utils/              # pure helpers: text.js, color.js, files.js
+│   ├── decor/              # Confetti.js, Cat.js
+│   ├── pages/NotFound.js   # 404 page
+│   ├── styles/             # base.css, todomvc.css, details.css, overlays.css, decor.css
+│   └── assets/logo.svg
+└── src/                    # the framework
+    ├── index.js            # public API (import everything from here)
+    ├── renderer/           # create_elemant, render, diffing, mount, attrs
+    ├── state/              # global store + ref
+    ├── router/             # hash router
+    └── utils/              # VElement class, event system
 ```
 
 ## Why it works this way (the big idea)
@@ -217,11 +242,68 @@ All functions are documented with JSDoc in `src/`.
 - A component must be fast and free of side effects: it can be called after every state change.
 - Don't change the framework's DOM by hand (e.g. `appendChild` inside `#app`); the diff assumes it owns it.
 - Only events that have an `on<type>` property are supported (all common ones).
-- Hash routing only (`#/path`). toio uses one route (`#/`) plus the 404 page for any unknown path.
+- Hash routing only (`#/path`). The app uses three routes (`#/`, `#/active`, `#/completed`) plus the 404 page for any unknown path.
 
-## The toio app
+## The TodoMVC app
 
-`index.html` runs toio. The code is in `toio/app.js` and uses every part of the framework: tasks with titles, descriptions, colors and attachments, filters (all / active / done), search, pagination, a task dialog with a lightbox, undo toasts, a celebration effect and pets.
+`index.html` runs the app. The code is split by role inside `todo/` (see the tree above) and uses every part of the framework. The DOM is the same as the official [JavaScript ES6 example](https://todomvc.com/examples/javascript-es6/dist/):
 
-- Tasks are saved in `localStorage` (key `toio-tasks`) and restored on load.
-- The 404 page (`toio/pages.js`) is shown for any unknown hash path.
+```html
+<section class="todoapp">
+  <header class="header"><h1>todos</h1><input class="new-todo" placeholder="What needs to be done?" autofocus></header>
+  <main class="main">
+    <div class="toggle-all-container">
+      <input id="toggle-all" class="toggle-all" type="checkbox">
+      <label class="toggle-all-label" for="toggle-all">Mark all as complete</label>
+    </div>
+    <ul class="todo-list">
+      <li data-id="..." class="completed|editing">
+        <div class="view"><input class="toggle" type="checkbox"><label>Title</label><button class="destroy"></button></div>
+        <input class="edit">            <!-- only while editing -->
+      </li>
+    </ul>
+  </main>
+  <footer class="footer">
+    <span class="todo-count"><strong>2</strong> items left</span>
+    <ul class="filters"><li><a href="#/" class="selected">All</a></li><li><a href="#/active">Active</a></li><li><a href="#/completed">Completed</a></li></ul>
+    <button class="clear-completed">Clear completed</button>
+  </footer>
+</section>
+<footer class="info">...</footer>
+```
+
+- **Add** a todo: type in `.new-todo` and press Enter (empty text is ignored). The `main` section and the `footer` only appear once there is at least one todo.
+- **Check/uncheck** one todo with its checkbox, or all of them with `toggle-all`.
+- **Remove** a todo with the `×` button (shown on hover). **Clear completed** removes only the checked ones (the button only appears if one is checked).
+- **Counter**: `.todo-count` shows the number of unchecked todos (`1 item left` / `N items left`).
+- **Filters**: All / Active / Completed are routes (`#/`, `#/active`, `#/completed`), so the URL changes. The selected link gets the class `selected`.
+- **Edit**: double-click a todo (`onDblClick`) to edit it. Enter or leaving the field saves, Escape cancels, and an empty text removes the todo.
+- The todos are saved in `localStorage` with `subscribe` and restored on load.
+
+### Extras
+
+The TodoMVC markup above is unchanged; the extras are added around it.
+
+- **Details of a new todo**: under `.new-todo`, a title counter (`12/60`) and an **Add details** button open a panel with a description, a color, an icon and files. Pressing Enter in `.new-todo` (or **Add todo**) adds the todo with those details. Without details, it works exactly like any TodoMVC.
+- **Description**: shown under the title on the card (3 lines max, full text in the dialog).
+- **Color**: 6 preset swatches, or any color with the `+` picker. New todos get the next preset color by default. Text turns white on dark colors. The color is set as CSS variables on the `li` (`--todo-color`, `--todo-ink`), so no element is added.
+- **Icons**: 14 hand-made SVG icons (`todo/icons/task-icons.js`): star, heart, home, work, shopping, study, fitness, travel, code, music, gift, plant, coffee, reminder.
+- **Files**: add photos or documents with **Add files** or by drag and drop. Photos open in a viewer; other files download. Files use `div`s, not `li`s, so `.todo-list li` still matches only todos.
+- **Details dialog**: the `⋯` button (or a click on the description) opens a dialog to change the title, description, color, icon and files. Save keeps the changes; Cancel, Escape or a click outside drops them.
+- After a removal or Clear completed, a toast offers **Undo**. Confetti falls when every todo is done (it never blocks clicks). A draggable cat on wide screens (its position is saved).
+
+### Limits
+
+All limits are in `todo/config/constants.js` (`LIMITS`). They are checked in the inputs (`maxlength`, disabled buttons) **and** again in the state actions and when loading saved data, so they can't be bypassed.
+
+| What | Limit |
+|---|---|
+| Title | 60 characters (counter turns to a warning at 90%) |
+| Description | 200 characters |
+| Files per todo | 5 |
+| Size per file | 1 MB (photos are resized to 1280 px and re-encoded as JPEG first) |
+| All saved data | about 4.5 MB (browsers give about 5 MB of localStorage) |
+
+Files are read in parallel with `Promise.allSettled`, so one bad file does not block the others, and each problem is reported in the toast.
+
+The framework features used: `createElemant` (every element), `ref` (`todos`, `composer`, `editing`, `draft`, `dialog`, `viewer`, `notice`... are global state), `Router` (the three filter routes + 404), the `onKeyDown` / `onInput` / `onChange` / `onClick` / `onDblClick` / `onBlur` / `onDrop` / `onDragOver` / `onPointer*` event attributes, and `on("keydown"/"resize")` for global events.

@@ -1,11 +1,9 @@
-/** Holds the active router. */
-
-/** The router created last (`null` before `new Router(...)`). */
+/** the last router that was made (null before new Router). */
 export let router = null;
 
 /**
- * Registers the active router.
- * @param {module:router/router.Router} instance - The router to register.
+ * save the router so any file can get it.
+ * @param {import("./router.js").Router} instance - the router.
  * @returns {void}
  */
 export function setRouter(instance) {
@@ -13,8 +11,8 @@ export function setRouter(instance) {
 }
 
 /**
- * Returns the active router.
- * @returns {module:router/router.Router|null} The router, or `null` if none was created yet.
+ * get the router.
+ * @returns {import("./router.js").Router|null} the router, or null if there is none yet.
  */
 export function getRouter() {
     return router;
