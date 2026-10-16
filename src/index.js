@@ -1,8 +1,4 @@
-/**
- * @module mini-framework
- *
- * Public entry point: `import { ... } from "./src/index.js"`.
- */
+/** Public entry point of the mini-framework. */
 export { createElemant, h } from "./renderer/create_elemant.js";
 export { VElement } from "./utils/elemant.js";
 export { build, mount, rerender } from "./renderer/mount.js";

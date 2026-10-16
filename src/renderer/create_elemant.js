@@ -1,27 +1,13 @@
-/**
- * @module renderer/create_elemant
- */
+/** Factory used to describe the interface as virtual elements. */
 import { VElement } from "../utils/elemant.js";
 
 /**
  * Creates a virtual element.
- *
- * `attrs` may be skipped: `createElemant("p", ["Hello"])` and
- * `createElemant("p", "Hello")` are the same as
- * `createElemant("p", {}, ["Hello"])`.
- *
- * @param {string} tag - HTML tag name.
- * @param {import("../utils/elemant.js").Attrs|import("../utils/elemant.js").VChildInput} [attrs]
- *        Attributes (or the children when attributes are skipped).
- * @param {import("../utils/elemant.js").VChildInput} [children] - Child nodes.
- * @returns {VElement}
+ * @param {string} tag - HTML (or SVG) tag name.
+ * @param {module:utils/elemant~Attrs|module:utils/elemant~VChildInput} [attrs] Attributes (or the children when attributes are skipped).
+ * @param {module:utils/elemant~VChildInput} [children] - Child nodes.
+ * @returns {VElement} A new virtual element.
  * @throws {TypeError} If an argument is invalid.
- *
- * @example
- * createElemant("div", { class: "box" }, [
- *     createElemant("h1", {}, ["Title"]),
- *     createElemant("button", { onClick: () => alert("hi") }, ["Click"]),
- * ]);
  */
 export function createElemant(tag, attrs, children) {
     if (
@@ -38,9 +24,5 @@ export function createElemant(tag, attrs, children) {
     return new VElement(tag, attrs ?? {}, children ?? []);
 }
 
-/**
- * Short alias of {@link createElemant}.
- *
- * @type {typeof createElemant}
- */
+/** Short alias of {@link module:renderer/create_elemant.createElemant}. */
 export const h = createElemant;

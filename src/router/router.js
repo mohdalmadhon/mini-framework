@@ -1,10 +1,4 @@
-/**
- * @module router/router
- *
- * Hash based routing (`index.html#/about`). The current path is stored in the
- * global state, so changing the URL changes the state and re-renders the app,
- * and navigating from code changes the URL.
- */
+/** Hash based routing (`index.html#/about`). */
 import { getState, setState, initState } from "../state/state.js";
 import { on } from "../utils/events.js";
 import { setRouter } from "./global.js";
@@ -12,44 +6,25 @@ import { setRouter } from "./global.js";
 /** State key that holds the current path. */
 export const ROUTE_KEY = "__route__";
 
-/**
- * Data given to a route component.
- *
- * @typedef {Object} RouteContext
- * @property {string} path - Current path (`"/user/42"`).
- * @property {Object<string, string>} params - Values of `:name` segments (`{ id: "42" }`).
- * @property {Router} router - The router.
- */
+/** Data given to a route component. */
 
 /**
- * @callback RouteComponent
+ * A function that returns the virtual tree of one route.
  * @param {RouteContext} context
- * @returns {import("../utils/elemant.js").VElement|Array<any>|null}
+ * @returns {module:utils/elemant.VElement|Array<any>|null}
  */
 
-/**
- * Hash router.
- *
- * @class
- *
- * @example
- * const router = new Router({
- *     "/": Home,
- *     "/user/:id": ({ params }) => createElemant("p", {}, ["User " + params.id]),
- *     "/404": NotFound,
- * });
- * build(() => router.view());
- */
+/** Hash router. */
 export class Router {
     /**
-     * @param {Object<string, RouteComponent>} routes - Map of path pattern to component.
-     *        Use `:name` for variable segments. `"/404"` is used for unknown paths.
+     * Creates the router, reads the current hash into the state and starts listening to hash changes.
+     * @param {Object<string, RouteComponent>} routes - Map of path pattern to component. Use `:name` for variable segments. `"/404"` is used for unknown paths.
      */
     constructor(routes) {
-        /** @type {Object<string, RouteComponent>} */
+        /** The route table given to the constructor. */
         this.routes = routes;
 
-        /** @private */
+        /** The route table pre-split into segments, so matching is fast. */
         this.compiled = Object.entries(routes).map(([pattern, component]) => ({
             pattern,
             component,
@@ -62,18 +37,13 @@ export class Router {
         this.sync();
     }
 
-    /**
-     * Current path, read from the global state.
-     *
-     * @type {string}
-     */
+    /** Current path, read from the global state. */
     get path() {
         return getState(ROUTE_KEY, "/");
     }
 
     /**
      * Copies the URL hash into the state (called on every `hashchange`).
-     *
      * @returns {void}
      */
     sync() {
@@ -82,7 +52,6 @@ export class Router {
 
     /**
      * Changes the URL, and therefore the state and the page.
-     *
      * @param {string} path - e.g. `"/about"`.
      * @returns {void}
      */
@@ -93,9 +62,8 @@ export class Router {
 
     /**
      * Finds the route matching a path.
-     *
-     * @param {string} path
-     * @returns {{component: RouteComponent, params: Object<string, string>}|null}
+     * @param {string} path - Path to look up (a `?query` part is ignored).
+     * @returns {{component: RouteComponent, params: Object<string, string>}|null} The matching component and its `:name` values, or `null` if no route matches.
      */
     match(path) {
         const parts = splitPath(path);
@@ -120,11 +88,8 @@ export class Router {
     }
 
     /**
-     * Returns the virtual tree of the current route. Call it from your root
-     * component; because it reads the state, the page re-renders when the
-     * route changes.
-     *
-     * @returns {import("../utils/elemant.js").VElement|Array<any>|null}
+     * Returns the virtual tree of the current route.
+     * @returns {module:utils/elemant.VElement|Array<any>|null} The tree, or `null` when there is no matching route and no `"/404"` route.
      */
     view() {
         const path = this.path;
@@ -137,7 +102,8 @@ export class Router {
 }
 
 /**
- * @param {string} path
+ * Splits a path into its non-empty segments, ignoring any `?query`.
+ * @param {string} path - A path or a route pattern.
  * @returns {string[]} Non-empty segments (`"/a/b/"` gives `["a", "b"]`).
  */
 function splitPath(path) {
@@ -145,6 +111,7 @@ function splitPath(path) {
 }
 
 /**
+ * Reads the current path out of `location.hash`.
  * @returns {string} The path stored in `location.hash` (`"/"` when empty).
  */
 function readHash() {

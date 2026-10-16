@@ -1,18 +1,10 @@
-/**
- * @module renderer/diffing
- *
- * Virtual DOM diffing. Instead of rebuilding the page, the new virtual tree
- * is compared with the previous one and only the differences are applied to
- * the real DOM. Elements that did not change keep their focus, caret and
- * scroll position.
- */
+/** Virtual DOM diffing. */
 import { VElement } from "../utils/elemant.js";
 import { render, namespaceOf } from "./render.js";
 import { applyAttrs } from "./attrs.js";
 
 /**
  * Updates one real DOM node so it matches `newV`.
- *
  * @param {VElement|string} oldV - Virtual node that produced `node`.
  * @param {VElement|string} newV - Wanted virtual node.
  * @param {Node} node - The real DOM node for `oldV`.
@@ -43,11 +35,6 @@ export function patchNode(oldV, newV, node) {
 
 /**
  * Updates the children of a real DOM parent so they match `newChildren`.
- *
- * Children with a `key` attribute are matched by key (so reordering or
- * deleting list items reuses the right DOM nodes); children without a key
- * are matched by position.
- *
  * @param {Node} parent - Real DOM parent.
  * @param {Array<VElement|string>} oldChildren - Children that produced `parent.childNodes`.
  * @param {Array<VElement|string>} newChildren - Wanted children.
@@ -99,8 +86,9 @@ export function patchChildren(parent, oldChildren, newChildren) {
 }
 
 /**
- * @param {VElement|string} child
- * @returns {string|number|undefined}
+ * Reads the `key` attribute of a virtual child.
+ * @param {VElement|string} child - A virtual child (text has no key).
+ * @returns {string|number|undefined} The key, or `undefined` if there is none.
  */
 function keyOf(child) {
     return typeof child === "string" ? undefined : child.attrs.key ?? undefined;

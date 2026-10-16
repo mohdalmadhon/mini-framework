@@ -1,10 +1,3 @@
-/**
- * TOIO - "the simplest todo app ever", built with the mini-framework.
- *
- * Tasks (title, description, color, icon, done, attachments) live in the
- * global state and are saved to localStorage on every change. Photos and
- * documents are stored inside the task as data URLs (see files.js).
- */
 import { createElemant as h, ref, getState, subscribe, on } from "../src/index.js";
 import {
     ICONS,
@@ -24,39 +17,15 @@ import { Pets } from "./pets.js";
 import { Celebration, celebrate } from "./celebrate.js";
 import { MAX_FILES, STORAGE_LIMIT, ACCEPT, formatSize, isImage, prepareFile, downloadAttachment } from "./files.js";
 
-/**
- * @typedef {Object} Task
- * @property {number} id
- * @property {string} title
- * @property {string} description
- * @property {string} color - Hex color, e.g. `"#b4f2dd"`.
- * @property {string|null} icon - Key of {@link ICONS}, or `null`.
- * @property {boolean} done
- * @property {number} createdAt - Timestamp (ms).
- * @property {import("./files.js").Attachment[]} attachments
- */
-
 const STORAGE_KEY = "toio-tasks";
 const SWATCHES = ["#b4f2dd", "#ffd58a", "#ffb4a8", "#c9c4ff", "#9fd8ff", "#f7a8d8"];
 
-/** Maximum length of a task title / description (enforced in the form). */
 const TITLE_MAX = 50;
 const DESC_MAX = 200;
-/** Longer texts are cut on the card; the full text opens in a dialog. */
 const TITLE_PREVIEW = 32;
 const DESC_PREVIEW = 80;
-/** Tasks per page. */
 const PAGE_SIZE = 10;
 
-/* ------------------------------------------------------------------ */
-/* storage                                                            */
-/* ------------------------------------------------------------------ */
-
-/**
- * Reads the saved tasks.
- *
- * @returns {Task[]} Saved tasks, or an empty list.
- */
 function loadTasks() {
     try {
         const data = JSON.parse(localStorage.getItem(STORAGE_KEY));
@@ -72,12 +41,6 @@ function loadTasks() {
     }
 }
 
-/**
- * Saves tasks to localStorage.
- *
- * @param {Task[]} list
- * @returns {boolean} `false` if the browser refused (storage full / blocked).
- */
 function saveTasks(list) {
     try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
@@ -87,59 +50,39 @@ function saveTasks(list) {
     }
 }
 
-/* ------------------------------------------------------------------ */
-/* state (one global key each, shared by the whole app)               */
-/* ------------------------------------------------------------------ */
-
 const newDraft = () => ({ title: "", description: "", color: SWATCHES[0], icon: "star" });
 
 const tasks = ref("tasks", loadTasks());
 const showForm = ref("toio:showForm", false);
-const draft = ref("toio:draft", newDraft()); // the "new task" form
-const pending = ref("toio:files", []); // files chosen in the form, not saved yet
-const edit = ref("toio:edit", null); // draft of the task being edited in the dialog
+const draft = ref("toio:draft", newDraft());
+const pending = ref("toio:files", []);
+const edit = ref("toio:edit", null);
 const query = ref("toio:query", "");
-const filter = ref("toio:filter", "all"); // all | active | done
+const filter = ref("toio:filter", "all");
 const page = ref("toio:page", 1);
-const viewId = ref("toio:viewId", null); // task shown in the dialog
-const photo = ref("toio:photo", null); // { taskId, attId } shown in the lightbox
+const viewId = ref("toio:viewId", null);
+const photo = ref("toio:photo", null);
 const busy = ref("toio:busy", false);
-const drag = ref("toio:drag", null); // which drop area is under a dragged file
-const notice = ref("toio:notice", null); // { id, text, undoable }
+const drag = ref("toio:drag", null);
+const notice = ref("toio:notice", null);
 
-/** Which text field should grab focus after the next render. @type {"form"|"edit"|null} */
 let focusNext = null;
-/** The search input (to focus it with "/"). @type {HTMLInputElement|null} */
 let searchEl = null;
-/** Tasks removed last, so "Undo" can bring them back. @type {Array<{task: Task, index: number}>} */
 let removed = [];
 let noticeTimer = 0;
 
-// Save whenever the "tasks" state changes.
 subscribe((key) => {
     if (key === "tasks" && !saveTasks(getState("tasks"))) {
         notify("Could not save: this browser's storage is full.");
     }
 });
 
-/* ------------------------------------------------------------------ */
-/* actions                                                            */
-/* ------------------------------------------------------------------ */
-
-/**
- * Shows a short message at the bottom of the screen.
- *
- * @param {string} text
- * @param {boolean} [undoable=false] - Adds an "Undo" button.
- * @returns {void}
- */
 function notify(text, undoable = false) {
     clearTimeout(noticeTimer);
     notice.value = { id: Date.now(), text, undoable };
     noticeTimer = setTimeout(() => (notice.value = null), undoable ? 7000 : 4500);
 }
 
-/** @returns {void} Brings back the last removed task(s). */
 function undo() {
     const list = [...tasks.value];
     for (const { task, index } of [...removed].sort((a, b) => a.index - b.index)) {
@@ -150,26 +93,22 @@ function undo() {
     notice.value = null;
 }
 
-/** @returns {void} */
 function toggleForm() {
     if (!showForm.value) focusNext = "form";
     showForm.value = !showForm.value;
 }
 
-/** @returns {void} Closes the form and forgets what was typed / attached. */
 function cancelForm() {
     showForm.value = false;
     draft.value = { ...newDraft(), color: draft.value.color, icon: draft.value.icon };
     pending.value = [];
 }
 
-/** @returns {void} */
 function addTask() {
     const d = draft.value;
     const title = d.title.trim().slice(0, TITLE_MAX);
     if (!title) return;
 
-    /** @type {Task} */
     const task = {
         id: Date.now() + Math.floor(Math.random() * 1000),
         title,
@@ -185,20 +124,17 @@ function addTask() {
     draft.value = { ...d, title: "", description: "" };
     pending.value = [];
     showForm.value = false;
-    // show the new task: clear search and filter, go to the last page
     query.value = "";
     filter.value = "all";
     page.value = Math.ceil(tasks.value.length / PAGE_SIZE);
 }
 
-/** @param {number} id */
 function toggleTask(id) {
     const wasAllDone = tasks.value.length > 0 && tasks.value.every((t) => t.done);
     tasks.value = tasks.value.map((t) => (t.id === id ? { ...t, done: !t.done } : t));
     if (!wasAllDone && tasks.value.every((t) => t.done)) celebrate("done");
 }
 
-/** @param {number} id */
 function removeTask(id) {
     const list = tasks.value;
     const index = list.findIndex((t) => t.id === id);
@@ -210,14 +146,12 @@ function removeTask(id) {
     notify("Task removed", true);
 }
 
-/** @param {boolean} done */
 function setAll(done) {
     const wasAllDone = tasks.value.length > 0 && tasks.value.every((t) => t.done);
     tasks.value = tasks.value.map((t) => ({ ...t, done }));
     if (done && !wasAllDone && tasks.value.length > 0) celebrate("done");
 }
 
-/** @returns {void} */
 function removeAll() {
     const list = tasks.value;
     if (list.length === 0) return;
@@ -229,25 +163,21 @@ function removeAll() {
     celebrate("clear");
 }
 
-/** @param {number} id */
 function openTask(id) {
     edit.value = null;
     viewId.value = id;
 }
 
-/** @returns {void} */
 function closeDialog() {
     viewId.value = null;
     edit.value = null;
 }
 
-/** @param {Task} t */
 function startEdit(t) {
     focusNext = "edit";
     edit.value = { title: t.title, description: t.description, color: t.color, icon: t.icon };
 }
 
-/** @returns {void} */
 function saveEdit() {
     const e = edit.value;
     const id = viewId.value;
@@ -264,24 +194,11 @@ function saveEdit() {
     edit.value = null;
 }
 
-/**
- * Files of the form (`taskId` null) or of a saved task.
- *
- * @param {number|null} taskId
- * @returns {import("./files.js").Attachment[]}
- */
 function attachmentsOf(taskId) {
     if (taskId === null) return pending.value;
     return tasks.value.find((t) => t.id === taskId)?.attachments ?? [];
 }
 
-/**
- * Reads the chosen files and adds them to the form or to a saved task.
- *
- * @param {File[]} files
- * @param {number|null} taskId - `null` for the "new task" form.
- * @returns {Promise<void>}
- */
 async function attach(files, taskId) {
     if (files.length === 0) return;
 
@@ -318,10 +235,6 @@ async function attach(files, taskId) {
     if (problems.length) notify(problems[0]);
 }
 
-/**
- * @param {number|null} taskId
- * @param {number} attId
- */
 function removeAttachment(taskId, attId) {
     if (taskId === null) {
         pending.value = pending.value.filter((a) => a.id !== attId);
@@ -332,11 +245,6 @@ function removeAttachment(taskId, attId) {
     );
 }
 
-/**
- * Moves the lightbox to the next / previous photo.
- *
- * @param {1|-1} dir
- */
 function stepPhoto(dir) {
     const p = photo.value;
     if (!p) return;
@@ -346,7 +254,6 @@ function stepPhoto(dir) {
     photo.value = { taskId: p.taskId, attId: images[(i + dir + images.length) % images.length].id };
 }
 
-// Keyboard: Esc closes, arrows browse photos, "/" searches, "n" adds a task.
 on("keydown", (e) => {
     if (e.key === "Escape") {
         if (photo.value) photo.value = null;
@@ -360,7 +267,7 @@ on("keydown", (e) => {
         return;
     }
 
-    if (!searchEl?.isConnected || viewId.value !== null) return; // not on the home page
+    if (!searchEl?.isConnected || viewId.value !== null) return;
     const el = e.target;
     const typing = el instanceof HTMLElement && (el.matches("input, textarea, select") || el.isContentEditable);
     if (typing || e.ctrlKey || e.metaKey || e.altKey) return;
@@ -374,78 +281,30 @@ on("keydown", (e) => {
     }
 });
 
-/* ------------------------------------------------------------------ */
-/* helpers                                                            */
-/* ------------------------------------------------------------------ */
-
-/**
- * Cuts a text for the card preview.
- *
- * @param {string} text
- * @param {number} max - Maximum number of characters kept.
- * @returns {string} The text, ending with "..." when it was cut.
- */
 const preview = (text, max) => {
     const flat = text.replace(/\s+/g, " ").trim();
     return flat.length > max ? `${flat.slice(0, max).trimEnd()}...` : flat;
 };
 
-/**
- * @param {Task} t
- * @returns {boolean} `true` when the card shows only a part of the text.
- */
 const isCut = (t) => t.title.length > TITLE_PREVIEW || t.description.length > DESC_PREVIEW || t.description.includes("\n");
 
-/**
- * Picks a readable text color (dark or light) for a background color.
- *
- * @param {string} hex - `#rrggbb`.
- * @returns {string} A text color.
- */
 export function textColorFor(hex) {
     const n = parseInt(hex.slice(1), 16);
     const luma = 0.299 * (n >> 16) + 0.587 * ((n >> 8) & 255) + 0.114 * (n & 255);
     return luma > 150 ? "#1f3a3d" : "#ffffff";
 }
 
-/**
- * @param {Date} d
- * @returns {string} `"Mon - Oct 16"`.
- */
 const dayLabel = (d) =>
     `${d.toLocaleDateString("en-US", { weekday: "short" })} - ${d.toLocaleDateString("en-US", { month: "short", day: "numeric" })}`;
 
-/**
- * @param {number} ts - Timestamp (ms).
- * @returns {string} `"16:00 Mon (Oct 16)"`.
- */
 const stamp = (ts) => {
     const d = new Date(ts);
     const time = d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
     return `${time} ${d.toLocaleDateString("en-US", { weekday: "short" })} (${d.toLocaleDateString("en-US", { month: "short", day: "numeric" })})`;
 };
 
-/**
- * @param {number} length - Current text length.
- * @param {number} max - Limit.
- * @returns {string} CSS class of a character counter (warns near the limit).
- */
 const counterClass = (length, max) => (length >= max * 0.9 ? "counter warn" : "counter");
 
-/* ------------------------------------------------------------------ */
-/* components                                                         */
-/* ------------------------------------------------------------------ */
-
-/**
- * Title, description, color and icon fields, used by the "new task" form and
- * by the edit mode of the dialog.
- *
- * @param {{title: string, description: string, color: string, icon: string|null}} d - Current values.
- * @param {(changes: object) => void} patch - Applies changes to the values.
- * @param {"form"|"edit"} owner - Which field set may take the focus.
- * @param {() => void} onEnter - Called when Enter is pressed in the title.
- * @returns {Array<import("../src/index.js").VElement>}
- */
 function Fields(d, patch, owner, onEnter) {
     return [
         h("input", {
@@ -522,12 +381,6 @@ function Fields(d, patch, owner, onEnter) {
     ];
 }
 
-/**
- * The list of files of a task (or of the form), with remove buttons.
- *
- * @param {number|null} taskId
- * @param {import("./files.js").Attachment[]} items
- */
 const FileList = (taskId, items) =>
     h(
         "ul",
@@ -567,12 +420,6 @@ const FileList = (taskId, items) =>
         )
     );
 
-/**
- * "Add files" area: a button plus drag and drop.
- *
- * @param {number|null} taskId - `null` for the new-task form.
- * @param {import("./files.js").Attachment[]} items
- */
 const AttachArea = (taskId, items) => {
     const areaId = taskId ?? "form";
     const full = items.length >= MAX_FILES;
@@ -607,7 +454,7 @@ const AttachArea = (taskId, items) => {
                         accept: ACCEPT,
                         disabled: full,
                         onChange: (e) => {
-                            const chosen = Array.from(e.target.files ?? []); // copy before clearing
+                            const chosen = Array.from(e.target.files ?? []);
                             e.target.value = "";
                             attach(chosen, taskId);
                         },
@@ -626,17 +473,11 @@ const AttachArea = (taskId, items) => {
     );
 };
 
-/**
- * Root component of the TOIO app.
- *
- * @returns {import("../src/index.js").VElement}
- */
 export function ToioApp() {
     const list = tasks.value;
     const doneCount = list.filter((t) => t.done).length;
     const percent = list.length ? Math.round((doneCount / list.length) * 100) : 0;
 
-    // tab + search -> pages
     const tab = filter.value;
     const byTab = list.filter((t) => tab === "all" || (tab === "done" ? t.done : !t.done));
     const needle = query.value.trim().toLowerCase();
@@ -677,7 +518,6 @@ export function ToioApp() {
             ]),
         ]);
 
-    /** @param {Task} t */
     const TaskCard = (t) => {
         const files = t.attachments ?? [];
         const thumb = files.find(isImage);
@@ -757,7 +597,6 @@ export function ToioApp() {
         );
     };
 
-    /** Dialog with the full task: read, edit, add files. @param {Task} t */
     const TaskDialog = (t) => {
         const e = edit.value;
         const color = e ? e.color : t.color;
@@ -832,7 +671,6 @@ export function ToioApp() {
         );
     };
 
-    /** Full-screen photo viewer. */
     const Lightbox = () => {
         const p = photo.value;
         if (!p) return null;
@@ -876,7 +714,6 @@ export function ToioApp() {
         );
     };
 
-    /** Page buttons: previous, up to 5 numbers around the current page, next. */
     const Pagination = () => {
         const first = Math.max(1, Math.min(currentPage - 2, pageCount - 4));
         const last = Math.min(pageCount, first + 4);

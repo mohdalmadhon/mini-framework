@@ -1,42 +1,20 @@
-/**
- * @module utils/events
- *
- * The framework's own event system.
- *
- * Instead of calling `addEventListener` for every element, handlers live in a
- * private registry owned by the framework. For each (target, event type) pair
- * the framework installs ONE small dispatcher through the DOM `on<type>`
- * property (e.g. `el.onclick`). The dispatcher looks the handlers up in the
- * registry and calls them. Because handlers are looked up at event time,
- * re-rendering never has to unbind/rebind anything: it only swaps an entry in
- * the registry.
- *
- * Two ways to use it:
- *  1. Declaratively on elements: `createElemant("button", { onClick: fn })`
- *  2. Globally (keybindings, scroll, resize...): `on("keydown", fn)`
- */
+/** The framework's own event system. */
 
 /**
- * @callback EventHandler
+ * A function called when an event happens.
  * @param {Event} event - The native DOM event.
  * @returns {void}
  */
 
-/**
- * @typedef {Object} HandlerSlot
- * @property {EventHandler|null} own - The single handler declared on a virtual element.
- * @property {Set<EventHandler>} extra - Handlers added with {@link on}.
- */
+/** The handlers of one (target, event type) pair. */
 
-/** @type {WeakMap<object, Map<string, HandlerSlot>>} */
+/** The private handler registry: target, then event type, then its slot. */
 const registry = new WeakMap();
 
 /**
- * Tells whether an attribute name looks like an event attribute
- * (`onClick`, `onKeyDown`, `onInput`...).
- *
+ * Tells whether an attribute name looks like an event attribute (`onClick`, `onKeyDown`, `onInput`...).
  * @param {string} name - Attribute name.
- * @returns {boolean}
+ * @returns {boolean} `true` if it starts with `on` followed by a letter.
  */
 export function isEventAttr(name) {
     return typeof name === "string" && /^on[A-Za-z]/.test(name);
@@ -44,7 +22,6 @@ export function isEventAttr(name) {
 
 /**
  * Converts an event attribute name to a DOM event type.
- *
  * @param {string} name - e.g. `"onKeyDown"`.
  * @returns {string} e.g. `"keydown"`.
  */
@@ -54,12 +31,10 @@ export function toEventName(name) {
 
 /**
  * Returns (and optionally creates) the handler slot of a target/type pair.
- * Creating a slot installs the dispatcher on the target.
- *
  * @param {object} target - `window`, `document` or an element.
  * @param {string} type - Event type, lowercase.
  * @param {boolean} [create=false] - Create the slot if missing.
- * @returns {HandlerSlot|undefined}
+ * @returns {HandlerSlot|undefined} The slot, or `undefined` if missing and not created.
  */
 function getSlot(target, type, create = false) {
     let byType = registry.get(target);
@@ -82,9 +57,8 @@ function getSlot(target, type, create = false) {
 
 /**
  * Installs the dispatcher through the `on<type>` property of the target.
- *
- * @param {object} target
- * @param {string} type
+ * @param {object} target - `window`, `document` or an element.
+ * @param {string} type - Event type, lowercase.
  * @returns {void}
  */
 function install(target, type) {
@@ -98,9 +72,8 @@ function install(target, type) {
 
 /**
  * Removes the dispatcher when a slot no longer has any handler.
- *
- * @param {object} target
- * @param {string} type
+ * @param {object} target - `window`, `document` or an element.
+ * @param {string} type - Event type, lowercase.
  * @returns {void}
  */
 function cleanup(target, type) {
@@ -114,9 +87,6 @@ function cleanup(target, type) {
 
 /**
  * Sets (or clears) the handler declared on a virtual element.
- * Used internally by the renderer; there is exactly one such handler per
- * element and event type.
- *
  * @param {object} target - The DOM element.
  * @param {string} type - Event type, lowercase (`"click"`).
  * @param {EventHandler|null} fn - Handler, or `null` to remove it.
@@ -136,22 +106,11 @@ export function setHandler(target, type, fn) {
 }
 
 /**
- * Registers a handler for any event type on any target, e.g. keybindings,
- * scrolling or resizing.
- *
- * Only events that have an `on<type>` property on the target are supported
- * (click, keydown, scroll, resize, hashchange, input, ...).
- *
+ * Registers a handler for any event type on any target, e.g. keybindings, scrolling or resizing.
  * @param {string} type - Event type (`"keydown"`, `"scroll"`...).
  * @param {EventHandler} handler - Function called with the native event.
  * @param {object} [target=window] - `window`, `document` or an element.
- * @returns {() => void} A function that removes this handler.
- *
- * @example
- * const stop = on("keydown", (e) => {
- *     if (e.key === "Escape") closeDialog();
- * });
- * // later: stop();
+ * @returns {function} A function that removes this handler.
  */
 export function on(type, handler, target = window) {
     getSlot(target, type.toLowerCase(), true).extra.add(handler);
@@ -159,8 +118,7 @@ export function on(type, handler, target = window) {
 }
 
 /**
- * Removes a handler added with {@link on}.
- *
+ * Removes a handler added with {@link module:utils/events.on}.
  * @param {string} type - Event type.
  * @param {EventHandler} handler - The same function passed to `on`.
  * @param {object} [target=window] - The same target passed to `on`.

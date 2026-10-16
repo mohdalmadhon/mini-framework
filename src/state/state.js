@@ -1,30 +1,23 @@
-/**
- * @module state/state
- *
- * The global state store. It is one shared `Map`, so every page and every
- * component can reach the same state at any time. Changing a value notifies
- * the subscribers; the renderer is one of them and re-renders the app.
- */
+/** The global state store. */
 
 /**
- * @callback StateListener
+ * Called every time a state value changes.
  * @param {string} key - The key that changed.
  * @param {*} value - Its new value.
  * @returns {void}
  */
 
-/** @type {Map<string, *>} */
+/** The store itself: state key to value. */
 export const componentStates = new Map();
 
-/** @type {Set<StateListener>} */
+/** Functions to call when the state changes. */
 const listeners = new Set();
 
 /**
  * Reads a value from the global state.
- *
  * @param {string} key - State key.
  * @param {*} [fallback] - Returned when the key does not exist.
- * @returns {*}
+ * @returns {*} The stored value, or `fallback`.
  */
 export function getState(key, fallback) {
     return componentStates.has(key) ? componentStates.get(key) : fallback;
@@ -32,9 +25,8 @@ export function getState(key, fallback) {
 
 /**
  * Tells whether a key exists in the state.
- *
- * @param {string} key
- * @returns {boolean}
+ * @param {string} key - State key.
+ * @returns {boolean} `true` if the key exists.
  */
 export function hasState(key) {
     return componentStates.has(key);
@@ -42,9 +34,7 @@ export function hasState(key) {
 
 /**
  * Sets a key only if it does not exist yet, WITHOUT notifying subscribers.
- * Used to give a state its first value while rendering.
- *
- * @param {string} key
+ * @param {string} key - State key.
  * @param {*} value - Initial value.
  * @returns {void}
  */
@@ -53,11 +43,7 @@ export function initState(key, value) {
 }
 
 /**
- * Writes a value to the global state and notifies subscribers (which
- * schedules a re-render). Nothing happens if the value is identical
- * (`Object.is`). For arrays and objects, store a NEW array/object instead of
- * mutating the old one.
- *
+ * Writes a value to the global state and notifies subscribers (which schedules a re-render).
  * @param {string} key - State key.
  * @param {*} value - New value.
  * @returns {void}
@@ -73,9 +59,8 @@ export function setState(key, value) {
 
 /**
  * Calls `listener` every time any state value changes.
- *
- * @param {StateListener} listener
- * @returns {() => void} A function that stops the subscription.
+ * @param {StateListener} listener - Function called with the key and the new value.
+ * @returns {function} A function that stops the subscription.
  */
 export function subscribe(listener) {
     listeners.add(listener);

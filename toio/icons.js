@@ -1,18 +1,7 @@
-/**
- * SVG icons for TOIO, drawn with the framework itself (`createElemant`).
- * Task icons use a 48x48 viewBox; UI icons use 24x24 and `currentColor`.
- */
 import { createElemant as h } from "../src/index.js";
 
 const INK = "#1f3a3d";
 
-/**
- * Wraps shapes in an outlined 48x48 `<svg>`.
- *
- * @param {number} size - Width and height in px.
- * @param {Array<import("../src/index.js").VElement>} shapes - Drawn shapes.
- * @returns {import("../src/index.js").VElement}
- */
 function art(size, shapes) {
     return h(
         "svg",
@@ -32,11 +21,6 @@ function art(size, shapes) {
     );
 }
 
-/**
- * Task icons, by name. Each value draws the icon at a given size.
- *
- * @type {Object<string, (size?: number) => import("../src/index.js").VElement>}
- */
 export const ICONS = {
     plant: (s = 44) =>
         art(s, [
@@ -99,14 +83,8 @@ export const ICONS = {
         ]),
 };
 
-/** Icon names, in display order. @type {string[]} */
 export const ICON_NAMES = Object.keys(ICONS);
 
-/**
- * @param {string} d - Path data.
- * @param {number} [size=22]
- * @returns {import("../src/index.js").VElement} A `currentColor` UI icon.
- */
 function ui(d, size = 22, width = 3) {
     return h(
         "svg",
@@ -125,13 +103,9 @@ function ui(d, size = 22, width = 3) {
     );
 }
 
-/** "+" icon. @returns {import("../src/index.js").VElement} */
 export const PlusIcon = () => ui("M12 5V19M5 12H19");
-/** Check mark. @param {number} [s] @returns {import("../src/index.js").VElement} */
 export const CheckIcon = (s) => ui("M5 12.5L9.5 17L19 7", s);
-/** "x" icon. @param {number} [s] @returns {import("../src/index.js").VElement} */
 export const CloseIcon = (s) => ui("M6 6L18 18M18 6L6 18", s);
-/** Magnifier. @param {number} [s] @returns {import("../src/index.js").VElement} */
 export const SearchIcon = (s) =>
     h(
         "svg",
@@ -149,26 +123,14 @@ export const SearchIcon = (s) =>
         [h("circle", { cx: 11, cy: 11, r: 6.5 }), h("path", { d: "M16 16L20.5 20.5" })]
     );
 
-/** Paperclip. @param {number} [s] @returns {import("../src/index.js").VElement} */
 export const PaperclipIcon = (s) =>
     ui("M21.4 11L12.2 20.2a6 6 0 0 1-8.5-8.5l9.2-9.2a4 4 0 0 1 5.7 5.7l-9.2 9.2a2 2 0 0 1-2.8-2.8l8.5-8.5", s, 2.5);
-/** Document. @param {number} [s] @returns {import("../src/index.js").VElement} */
 export const FileIcon = (s) => ui("M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z M13 2v7h7", s, 2.5);
-/** Download arrow. @param {number} [s] @returns {import("../src/index.js").VElement} */
 export const DownloadIcon = (s) => ui("M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4 M7 10l5 5 5-5 M12 15V3", s, 2.5);
-/** Pencil. @param {number} [s] @returns {import("../src/index.js").VElement} */
 export const EditIcon = (s) => ui("M12 20h9 M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z", s, 2.5);
-/** Undo arrow. @param {number} [s] @returns {import("../src/index.js").VElement} */
 export const UndoIcon = (s) => ui("M3 7v6h6 M21 17a9 9 0 0 0-15-6.7L3 13", s, 2.5);
-/** House. @param {number} [s] @returns {import("../src/index.js").VElement} */
 export const HomeIcon = (s) => ui("M3 11l9-8 9 8 M5 10v10h5v-6h4v6h5V10", s, 2.5);
 
-/**
- * Sad clipboard used on the error page.
- *
- * @param {number} [size=150]
- * @returns {import("../src/index.js").VElement}
- */
 export const LostArt = (size = 150) =>
     art(size, [
         h("g", { transform: "rotate(-8 24 26)" }, [

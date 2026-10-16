@@ -4,8 +4,8 @@ import { TrophyArt, CheckIcon } from "./icons.js";
 const COLORS = ["#ffd58a", "#b4f2dd", "#ffb4a8", "#c9c4ff", "#9fd8ff", "#f7a8d8", "#ffffff"];
 
 const MESSAGES = {
-    done: { title: "All done!", text: "You finished every single task. Time to celebrate!", button: "Done" },
-    clear: { title: "All Done", text: "Your list is empty. A fresh start awaits.", button: "Done" },
+    done: { title: "All done!", text: "You finished every single task. Time to celebrate!", button: "Yay!" },
+    clear: { title: "Squeaky clean!", text: "Your list is empty. A fresh start awaits.", button: "Awesome" },
 };
 
 export const celebration = ref("toio:celebration", null);

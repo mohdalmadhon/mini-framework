@@ -1,21 +1,11 @@
-/**
- * @module router/global
- *
- * Holds the active router so any file can reach it with
- * `import { router } from ".../router/global.js"`.
- */
+/** Holds the active router. */
 
-/**
- * The router created last (`null` before `new Router(...)`).
- *
- * @type {import("./router.js").Router|null}
- */
+/** The router created last (`null` before `new Router(...)`). */
 export let router = null;
 
 /**
- * Registers the active router. Called by the `Router` constructor.
- *
- * @param {import("./router.js").Router} instance
+ * Registers the active router.
+ * @param {module:router/router.Router} instance - The router to register.
  * @returns {void}
  */
 export function setRouter(instance) {
@@ -23,7 +13,8 @@ export function setRouter(instance) {
 }
 
 /**
- * @returns {import("./router.js").Router|null}
+ * Returns the active router.
+ * @returns {module:router/router.Router|null} The router, or `null` if none was created yet.
  */
 export function getRouter() {
     return router;

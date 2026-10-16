@@ -1,6 +1,4 @@
-/**
- * @module renderer/render
- */
+/** Turns virtual nodes into real DOM nodes. */
 import { VElement } from "../utils/elemant.js";
 import { applyAttrs } from "./attrs.js";
 
@@ -8,9 +6,7 @@ import { applyAttrs } from "./attrs.js";
 export const SVG_NS = "http://www.w3.org/2000/svg";
 
 /**
- * Namespace that children of `parent` must be created in: SVG inside an
- * `<svg>` (except inside `<foreignObject>`), plain HTML otherwise.
- *
+ * Namespace that children of `parent` must be created in: SVG inside an `<svg>` (except inside `<foreignObject>`), plain HTML otherwise.
  * @param {Node|null} parent - Real DOM parent.
  * @returns {string|null} The SVG namespace, or `null` for HTML.
  */
@@ -23,11 +19,7 @@ export function namespaceOf(parent) {
 }
 
 /**
- * Turns a virtual node into a real (detached) DOM node. An `svg` tag, and
- * everything inside it, is created as a real SVG element, so
- * `createElemant("svg", { viewBox: "0 0 10 10" }, [createElemant("circle", ...)])`
- * just works.
- *
+ * Turns a virtual node into a real (detached) DOM node.
  * @param {VElement|string} node - Virtual element, or a string for a text node.
  * @param {string|null} [parentNs=null] - Namespace inherited from the parent.
  * @returns {Element|Text} The real DOM node.
