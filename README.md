@@ -44,14 +44,6 @@ todo_list/
 
 ## how it works
 
-you don't call the framework, it calls you. you give it a function that says how the page looks, and it decides when to run it again.
-
-```
- state changes ──► your component runs again ──► new virtual tree
-        ▲                                               │
-        │                                     compare with the old one
-   event handler ◄── real dom ◄── only the changes ◄────┘
-```
 
 1. a **component** is a function that returns virtual elements. it never touches the real dom.
 2. `build(component)` shows it one time and then listens to the state.
@@ -177,43 +169,3 @@ build(() => router.view(), "#app");
 - `router.navigate("/about")` to go from code.
 - the path is in the state, so back / forward work.
 - every page gets `{ path, params, router }`.
-
-## good to know
-
-- a component can run after every change, so keep it fast.
-- don't change the dom inside `#app` by hand.
-- hash routing only (`#/path`).
-
-## the todoMVC
-
-same html, classes and ids as the [official example](https://todomvc.com/examples/javascript-es6/dist/): `todoapp`, `new-todo`, `toggle-all`, `todo-list`, `toggle`, `destroy`, `edit`, `footer`, `todo-count`, `filters`, `clear-completed`, `info`.
-
-- type and press enter to add. the list and the footer show up after the first todo.
-- check / uncheck one, or all with toggle-all.
-- `×` to remove. **clear completed** removes only the checked ones.
-- the counter shows how many are left.
-- all / active / completed are routes (`#/`, `#/active`, `#/completed`), so the url changes.
-- double click to edit. enter saves, escape cancels, empty removes it.
-- everything is saved in `localStorage`.
-
-### extras
-
-- **add details**: description, color, icon and files for a new todo.
-- the `⋯` button opens a box to change all of it later.
-- 14 svg icons made by hand.
-- files: photos open big, other files download. photos get smaller before saving.
-- undo after removing.
-- progress bar, rainbow at 100% and confetti.
-- drag todos to change the order.
-- **the cat**: drag it, click it to pet it. it reacts when you add, finish or remove todos, its eyes follow the mouse, and it sleeps if you do nothing.
-
-### limits
-
-| what | limit |
-|---|---|
-| title | 60 characters |
-| description | 200 characters |
-| files | 5 per todo |
-| file size | 1 MB |
-
-all limits are in `todo/config/constants.js`.
