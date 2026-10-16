@@ -80,3 +80,50 @@
 @media (prefers-reduced-motion: reduce) {
     .confetti { display: none; }
 }
+
+.cat-art { overflow: visible; transform-origin: 50% 90%; }
+.cat.mood-happy .cat-art { animation: cat-hop .5s cubic-bezier(.3, 1.6, .5, 1) 2; }
+.cat.mood-wow .cat-art { animation: cat-spin .9s cubic-bezier(.3, 1.3, .5, 1); }
+.cat.mood-sad .cat-art { animation: cat-droop 1.2s ease; }
+.cat.mood-sleep .cat-art { animation: cat-breathe 3s ease-in-out infinite; }
+.cat.mood-idle:hover .cat-art { animation: cat-wiggle .6s ease; }
+
+.cat-zzz {
+    position: absolute;
+    top: -14px;
+    right: -6px;
+    font-weight: 800;
+    font-size: 16px;
+    color: #fff;
+    text-shadow: 0 2px 0 rgba(0, 0, 0, .25);
+    pointer-events: none;
+    animation: zzz 2.4s ease-in-out infinite;
+}
+.cat-zzz span { font-size: .8em; margin-left: 2px; }
+
+.cat-bubble {
+    position: fixed;
+    z-index: 6;
+    max-width: 220px;
+    padding: 8px 12px;
+    border: 2px solid var(--ink);
+    border-radius: 14px;
+    background: #fff;
+    color: var(--ink);
+    font-weight: 800;
+    font-size: 14px;
+    line-height: 1.3;
+    box-shadow: 0 3px 0 rgba(0, 0, 0, .22);
+    pointer-events: none;
+    transform: translateY(-100%);
+    animation: bubble-in .3s cubic-bezier(.3, 1.6, .5, 1) both;
+}
+.cat-bubble.below { transform: none; }
+
+@keyframes cat-hop { 0%, 100% { transform: translateY(0) scale(1); } 40% { transform: translateY(-14px) scale(1.05, .95); } }
+@keyframes cat-spin { 0% { transform: rotate(0) scale(1); } 50% { transform: rotate(180deg) scale(1.2); } 100% { transform: rotate(360deg) scale(1); } }
+@keyframes cat-droop { 0%, 100% { transform: rotate(0); } 30% { transform: rotate(-8deg) translateY(3px); } 60% { transform: rotate(6deg) translateY(3px); } }
+@keyframes cat-breathe { 0%, 100% { transform: scale(1, 1); } 50% { transform: scale(1.03, .96); } }
+@keyframes cat-wiggle { 0%, 100% { transform: rotate(0); } 25% { transform: rotate(-7deg); } 75% { transform: rotate(7deg); } }
+@keyframes zzz { 0% { opacity: 0; transform: translate(0, 6px); } 30%, 70% { opacity: 1; } 100% { opacity: 0; transform: translate(8px, -10px); } }
+@keyframes bubble-in { from { opacity: 0; scale: .6; } to { opacity: 1; scale: 1; } }

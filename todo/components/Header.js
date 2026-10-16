@@ -3,7 +3,7 @@ import { ENTER_KEY, LIMITS } from "../config/constants.js";
 import { composer, patchComposer, submitComposer } from "../state/composer.js";
 
 export function Header() {
-    return h("header", { class: "header" }, [
+    return h("header", { key: "header", class: "header" }, [
         h("h1", {}, ["todos"]),
         h("input", {
             class: "new-todo",

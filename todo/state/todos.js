@@ -62,6 +62,16 @@ export function updateTodo(id, patch) {
     todos.value = todos.value.map((todo) => (todo.id === id ? { ...todo, ...patch } : todo));
 }
 
+export function moveTodo(fromId, toId) {
+    const list = [...todos.value];
+    const from = list.findIndex((todo) => todo.id === fromId);
+    const to = list.findIndex((todo) => todo.id === toId);
+    if (from < 0 || to < 0 || from === to) return;
+    const [moved] = list.splice(from, 1);
+    list.splice(to, 0, moved);
+    todos.value = list;
+}
+
 export function toggleTodo(id) {
     setWithCheer(todos.value.map((todo) => (todo.id === id ? { ...todo, completed: !todo.completed } : todo)));
 }

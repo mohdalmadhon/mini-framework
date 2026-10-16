@@ -6,7 +6,7 @@ export function Main({ path }) {
     const list = todos.value;
     if (list.length === 0) return null;
 
-    return h("main", { class: "main" }, [
+    return h("main", { key: "main", class: "main" }, [
         h("div", { class: "toggle-all-container" }, [
             h("input", {
                 id: "toggle-all",
@@ -17,6 +17,6 @@ export function Main({ path }) {
             }),
             h("label", { class: "toggle-all-label", for: "toggle-all" }, ["Mark all as complete"]),
         ]),
-        h("ul", { class: "todo-list" }, visibleTodos(list, path).map(TodoItem)),
+        h("ul", { class: "todo-list" }, visibleTodos(list, path).map((todo) => TodoItem(todo, path === "/"))),
     ]);
 }

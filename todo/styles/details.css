@@ -225,3 +225,39 @@
     .composer-panel { padding: 12px; }
     .panel-actions .btn { flex: 1; }
 }
+
+.empty-hint {
+    margin: 22px 0 0;
+    text-align: center;
+    color: #d9f7ef;
+    font-weight: 700;
+    animation: float 3.2s ease-in-out infinite;
+}
+
+.progress {
+    display: grid;
+    gap: 6px;
+    margin-top: 16px;
+    padding: 10px 14px;
+    border-radius: 16px;
+    background: var(--teal-dark);
+    color: #d9f7ef;
+    box-shadow: var(--shadow);
+}
+.progress-text { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; font-size: 14px; }
+.progress-text strong { color: var(--yellow); font-size: 16px; }
+.progress-cheer { font-weight: 800; }
+.progress-track { height: 10px; border-radius: 999px; background: rgba(0, 0, 0, .25); overflow: hidden; }
+.progress-fill {
+    height: 100%;
+    border-radius: 999px;
+    background: var(--yellow);
+    transition: width .5s cubic-bezier(.3, 1.3, .5, 1);
+}
+.progress.full .progress-fill {
+    background: linear-gradient(90deg, #ff7a7a, #ffd58a, #5fd09b, #9fd8ff, #c9c4ff, #f7a8d8, #ff7a7a);
+    background-size: 200% 100%;
+    animation: rainbow 2s linear infinite;
+}
+.progress.full .progress-cheer { color: var(--yellow); }
+@keyframes rainbow { to { background-position: -200% 0; } }

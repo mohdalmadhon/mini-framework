@@ -22,7 +22,7 @@ export function Footer({ path }) {
 
     const left = countLeft(list);
 
-    return h("footer", { class: "footer" }, [
+    return h("footer", { key: "footer", class: "footer" }, [
         Counter(left),
         Filters(path),
         list.length > left ? h("button", { class: "clear-completed", onClick: clearCompleted }, ["Clear completed"]) : null,

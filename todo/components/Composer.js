@@ -42,7 +42,7 @@ function DetailsPanel(form) {
 export function Composer() {
     const form = composer.value;
 
-    return h("div", { class: "composer" }, [
+    return h("div", { key: "composer", class: "composer" }, [
         h("div", { class: "composer-bar" }, [
             CharCount(form.title.length, LIMITS.title),
             h("div", { class: "composer-tools" }, [

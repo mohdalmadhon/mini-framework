@@ -4,6 +4,7 @@ import { inkFor } from "../utils/color.js";
 import { toggleTodo, removeTodo } from "../state/todos.js";
 import { editing, draft, startEdit, commitEdit, cancelEdit } from "../state/editing.js";
 import { openDialog } from "../state/dialog.js";
+import { dragging, dropTarget, startDrag, dragOverTodo, dropOnTodo, endDrag } from "../state/reorder.js";
 import { taskIcon, taskIconLabel } from "../icons/task-icons.js";
 import { MoreIcon } from "../icons/ui-icons.js";
 import { FileList } from "./fields/FileList.js";
@@ -41,9 +42,17 @@ function Extra(todo) {
     ]);
 }
 
-export function TodoItem(todo) {
+export function TodoItem(todo, canReorder = false) {
     const isEditing = editing.value === todo.id;
-    const className = [todo.completed ? "completed" : "", isEditing ? "editing" : ""].join(" ").trim();
+    const movable = canReorder && !isEditing;
+    const className = [
+        todo.completed ? "completed" : "",
+        isEditing ? "editing" : "",
+        dragging.value === todo.id ? "dragging" : "",
+        dropTarget.value === todo.id && dragging.value !== todo.id ? "drop-target" : "",
+    ]
+        .filter(Boolean)
+        .join(" ");
 
     return h(
         "li",
@@ -52,6 +61,11 @@ export function TodoItem(todo) {
             "data-id": todo.id,
             class: className,
             style: { "--todo-color": todo.color, "--todo-ink": inkFor(todo.color) },
+            draggable: movable ? "true" : null,
+            onDragStart: movable ? (event) => startDrag(event, todo.id) : null,
+            onDragOver: movable ? (event) => dragOverTodo(event, todo.id) : null,
+            onDrop: movable ? (event) => dropOnTodo(event, todo.id) : null,
+            onDragEnd: movable ? endDrag : null,
         },
         [
             h("div", { class: "view" }, [
