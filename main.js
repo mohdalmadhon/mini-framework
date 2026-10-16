@@ -1,10 +1,11 @@
 import { build, Router } from "./src/index.js";
-import { ToioApp } from "./toio/app.js";
-import { NotFoundPage } from "./toio/pages.js";
+import { TodoApp, NotFound } from "./todomvc/app.js";
 
 const router = new Router({
-    "/": ToioApp,
-    "/404": NotFoundPage,
+    "/": TodoApp,
+    "/active": TodoApp,
+    "/completed": TodoApp,
+    "/404": NotFound,
 });
 
 build(() => router.view(), "#app");
